@@ -6,6 +6,7 @@ import branchRoutes from '../modules/branch/routes.js';
 import counterRoutes from '../modules/counter/routes.js';
 import queueRoutes from '../modules/queue/routes.js';
 import tokenRoutes from '../modules/token/routes.js';
+import ratingRoutes from '../modules/rating/routes.js';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/branches', branchRoutes);
 router.use('/counters', counterRoutes);
 router.use('/queues', queueRoutes);
 router.use('/tokens', tokenRoutes);
+router.use('/ratings', ratingRoutes);
 
 export default router;
