@@ -7,6 +7,7 @@ import counterRoutes from '../modules/counter/routes.js';
 import queueRoutes from '../modules/queue/routes.js';
 import tokenRoutes from '../modules/token/routes.js';
 import ratingRoutes from '../modules/rating/routes.js';
+import analyticsRoutes from '../modules/analytics/routes.js';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/counters', counterRoutes);
 router.use('/queues', queueRoutes);
 router.use('/tokens', tokenRoutes);
 router.use('/ratings', ratingRoutes);
+router.use('/analytics', analyticsRoutes);
 
 export default router;
