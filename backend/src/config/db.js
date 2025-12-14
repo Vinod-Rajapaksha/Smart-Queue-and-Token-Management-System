@@ -11,13 +11,16 @@ const connectDB = async () => {
     logger.error(error);
     process.exit(1);
   }
+};
 
-  // Graceful Shutdown
-  process.on("SIGINT", async () => {
+export const closeDB = async () => {
+  try {
     await mongoose.connection.close();
-    logger.info("MongoDB connection closed.");
-    process.exit(0);
-  });
+    logger.info("MongoDB connection closed");
+  } catch (error) {
+    logger.error("Error while closing MongoDB connection");
+    logger.error(error);
+  }
 };
 
 export default connectDB;
