@@ -2,11 +2,12 @@ import * as authService from './service.js';
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role, branch } = req.body;
+    const { name, email, telephone, password, role, branch } = req.body;
 
     const user = await authService.register({
       name,
       email,
+      telephone,
       password,
       role,
       branch,
