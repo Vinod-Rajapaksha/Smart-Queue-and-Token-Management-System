@@ -6,7 +6,7 @@ import {
   verifyRefreshToken,
 } from '../../utils/jwt.js';
 
-export const register = async ({ name, email, password, role, branch }) => {
+export const register = async ({ name, email, telephone, password, role, branch }) => {
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
@@ -20,6 +20,7 @@ export const register = async ({ name, email, password, role, branch }) => {
   const user = await User.create({
     name,
     email,
+    telephone,
     password: hashed,
     role: role || 'STAFF',
     branch: branch || null,
