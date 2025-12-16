@@ -54,7 +54,7 @@ describe("Branch Service (Unit) - ESM", () => {
 
       expect(Branch.create).toHaveBeenCalledWith({
         name: "Main",
-        code: "col", // service passes original; DB/schema may uppercase or store as given
+        code: "col", 
         address: "No 1",
         city: "Colombo",
         contactNumber: "0771234567",

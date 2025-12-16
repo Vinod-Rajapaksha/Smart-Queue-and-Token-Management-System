@@ -7,7 +7,7 @@ import { hashPassword } from "../../utils/password.js";
 import { generateAccessToken } from "../../utils/jwt.js";
 
 describe("Branch Routes (Integration)", () => {
-  const base = "/api/branches"; // change if your mount path differs
+  const base = "/api/branches"; 
 
   const createUser = async ({
     name = "Admin",
@@ -67,7 +67,7 @@ describe("Branch Routes (Integration)", () => {
     const res = await request(app)
       .post(`${base}/`)
       .set("Authorization", `Bearer ${tokenFor(admin)}`)
-      .send({ name: "OnlyName" }); // missing code,address,city
+      .send({ name: "OnlyName" }); 
 
     expect(res.statusCode).toBe(400);
   });
@@ -77,7 +77,7 @@ describe("Branch Routes (Integration)", () => {
 
     const payload = {
       name: "Main Branch",
-      code: "col", // service checks uppercase duplicate
+      code: "col", 
       address: "No 1",
       city: "Colombo",
       contactNumber: "0771234567",
@@ -133,7 +133,7 @@ describe("Branch Routes (Integration)", () => {
     const admin = await createUser({ email: "admin5@test.com", role: "ADMIN" });
 
     const res = await request(app)
-      .get(`${base}/507f1f77bcf86cd799439011`) // valid ObjectId format, not existing
+      .get(`${base}/507f1f77bcf86cd799439011`) 
       .set("Authorization", `Bearer ${tokenFor(admin)}`);
 
     expect(res.statusCode).toBe(404);
