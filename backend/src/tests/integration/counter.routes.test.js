@@ -9,7 +9,7 @@ import { hashPassword } from "../../utils/password.js";
 import { generateAccessToken } from "../../utils/jwt.js";
 
 describe("Counter Routes (Integration)", () => {
-  const base = "/api/counters"; // change if your mount path differs
+  const base = "/api/counters"; 
 
   const createUser = async ({
     name = "Admin",
