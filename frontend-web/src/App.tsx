@@ -1,14 +1,10 @@
+import AppProviders from "./app/providers/AppProviders";
 import './App.css'
 
 function App() {
-
   return (
-    <>
-      <p className="read-the-docs">
-        ZeroQ
-      </p>
-    </>
-  )
+    <AppProviders />
+  );
 }
 
 export default App
