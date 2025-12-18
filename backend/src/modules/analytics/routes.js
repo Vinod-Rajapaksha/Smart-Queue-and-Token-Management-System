@@ -10,8 +10,8 @@ import {
 
 const router = express.Router();
 
-router.get('/overview', auth, allowRoles(ROLES.ADMIN), getOverview);
-router.get('/volume', auth, allowRoles(ROLES.ADMIN), getVolume);
-router.get('/ratings', auth, allowRoles(ROLES.ADMIN), getRatings);
+router.get('/overview', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER), getOverview);
+router.get('/volume', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER), getVolume);
+router.get('/ratings', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER), getRatings);
 
 export default router;

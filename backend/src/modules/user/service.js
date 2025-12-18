@@ -1,7 +1,8 @@
 import ApiError from '../../core/apiError.js';
-import User, { USER_ROLES } from '../../database/models/User.js';
+import User from '../../database/models/User.js';
 import Branch from '../../database/models/Branch.js';
 import { hashPassword } from '../../utils/password.js';
+import { ROLES } from '../../core/constants.js';
 
 export const listUsers = async ({ role, isActive, branchId } = {}) => {
   const filter = {};
@@ -26,7 +27,7 @@ export const listUsers = async ({ role, isActive, branchId } = {}) => {
 };
 
 export const listStaff = async () => {
-  const staff = await User.find({ role: 'STAFF' })
+  const staff = await User.find({ role: ROLES.STAFF })
     .select('-password -refreshToken')
     .populate('branch');
 
@@ -62,11 +63,11 @@ export const createUser = async ({
   email,
   password,
   telephone,
-  role = 'STAFF',
+  role = ROLES.STAFF,
   branch,
 }) => {
   
-  if (!USER_ROLES.includes(role)) {
+  if (!ROLES.includes(role)) {
     throw new ApiError(400, 'Invalid role');
   }
 
@@ -110,7 +111,7 @@ export const updateUser = async (userId, updates) => {
     }
   }
 
-  if (updateData.role && !USER_ROLES.includes(updateData.role)) {
+  if (updateData.role && !ROLES.includes(updateData.role)) {
     throw new ApiError(400, 'Invalid role');
   }
 

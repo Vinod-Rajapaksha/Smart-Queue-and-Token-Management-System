@@ -19,6 +19,7 @@ import {
   updateUserStatus,
   resetUserPassword,
 } from './controller.js';
+import { ROLES } from '../../core/constants.js';
 
 const router = Router();
 
@@ -27,20 +28,20 @@ router.use(auth);
 router.get('/me', getMe);
 router.patch('/me', validateUpdateOwnProfile, updateMe);
 
-router.get('/', allowRoles('ADMIN'), getUsers);
-router.get('/staff', allowRoles('ADMIN'), getStaff);
-router.post('/', allowRoles('ADMIN'), validateCreateUser, createUser);
-router.get('/:id', allowRoles('ADMIN'), getUserById);
-router.patch('/:id', allowRoles('ADMIN'), validateUpdateUser, updateUser);
+router.get('/', allowRoles(ROLES.ADMIN), getUsers);
+router.get('/staff', allowRoles(ROLES.ADMIN), getStaff);
+router.post('/', allowRoles(ROLES.ADMIN), validateCreateUser, createUser);
+router.get('/:id', allowRoles(ROLES.ADMIN), getUserById);
+router.patch('/:id', allowRoles(ROLES.ADMIN), validateUpdateUser, updateUser);
 router.patch(
   '/:id/status',
-  allowRoles('ADMIN'),
+  allowRoles(ROLES.ADMIN),
   validateStatusUpdate,
   updateUserStatus,
 );
 router.patch(
   '/:id/reset-password',
-  allowRoles('ADMIN'),
+  allowRoles(ROLES.ADMIN),
   validateResetPassword,
   resetUserPassword,
 );

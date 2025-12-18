@@ -16,6 +16,6 @@ const router = express.Router();
 
 router.post('/', auth, validateCreateToken, createToken);
 router.get('/me', auth, getMyTokens);
-router.patch('/:id/status', auth, allowRoles(ROLES.ADMIN, ROLES.STAFF), validateUpdateTokenStatus, updateTokenStatus);
+router.patch('/:id/status', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), validateUpdateTokenStatus, updateTokenStatus);
 
 export default router;

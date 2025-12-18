@@ -43,10 +43,12 @@ class AnalyticsService {
               $group: {
                 _id: null,
                 total: { $sum: 1 },
-                waiting: { $sum: { $cond: [{ $eq: ['$status', 'WAITING'] }, 1, 0] } },
+                created: { $sum: { $cond: [{ $eq: ['$status', 'CREATED'] }, 1, 0] } },
+                calling: { $sum: { $cond: [{ $eq: ['$status', 'CALLING'] }, 1, 0] } },
                 serving: { $sum: { $cond: [{ $eq: ['$status', 'SERVING'] }, 1, 0] } },
                 completed: { $sum: { $cond: [{ $eq: ['$status', 'COMPLETED'] }, 1, 0] } },
                 cancelled: { $sum: { $cond: [{ $eq: ['$status', 'CANCELLED'] }, 1, 0] } },
+                skipped: { $sum: { $cond: [{ $eq: ['$status', 'SKIPPED'] }, 1, 0] } },
               },
             },
           ],
