@@ -16,6 +16,10 @@ const tokenSchema = new mongoose.Schema(
       ref: 'Branch',
       required: true,
     },
+    counter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Counter',
+    },
     queue: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Queue',
@@ -23,15 +27,38 @@ const tokenSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['CREATED', 'WAITING', 'SERVING', 'COMPLETED', 'CANCELLED'],
+      enum: ['CREATED', 'WAITING', 'CALLING', 'SERVING', 'COMPLETED', 'CANCELLED', 'SKIPPED'],
       default: 'CREATED',
     },
     issuedAt: {
       type: Date,
       default: Date.now,
     },
+    skippedAt: Date,
+    skippedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    cancelledAt: Date,
+    cancelledBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     servedAt: Date,
+    servedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     completedAt: Date,
+    completedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    calledAt: Date,
+    calledBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   { timestamps: true }
 );

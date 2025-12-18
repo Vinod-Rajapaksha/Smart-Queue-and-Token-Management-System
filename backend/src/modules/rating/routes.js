@@ -15,7 +15,7 @@ const router = Router();
 
 router.post('/', auth, allowRoles(ROLES.CUSTOMER), validateCreateRating, createRatingController);
 
-router.get('/', auth, allowRoles(ROLES.ADMIN, ROLES.STAFF), listRatingsController);
-router.get('/summary', auth, allowRoles(ROLES.ADMIN, ROLES.STAFF), ratingSummaryController);
+router.get('/', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER), listRatingsController);
+router.get('/summary', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER), ratingSummaryController);
 
 export default router;

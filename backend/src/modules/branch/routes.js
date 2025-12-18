@@ -1,6 +1,7 @@
 import express from 'express';
 import { auth } from '../../middleware/auth.js';
 import { allowRoles } from '../../middleware/role.js';
+import { ROLES } from '../../core/constants.js';
 import {
   createBranch,
   getBranches,
@@ -19,23 +20,23 @@ router.use(auth);
 
 router.post(
   '/',
-  allowRoles('ADMIN'),
+  allowRoles(ROLES.ADMIN),
   validateCreateBranch,
   createBranch
 );
 
-router.get('/', allowRoles('ADMIN'), getBranches);
+router.get('/', allowRoles(ROLES.ADMIN), getBranches);
 
-router.get('/:id', allowRoles('ADMIN'), getBranchById);
+router.get('/:id', allowRoles(ROLES.ADMIN), getBranchById);
 
 router.patch(
   '/:id',
-  allowRoles('ADMIN'),
+  allowRoles(ROLES.ADMIN),
   validateUpdateBranch,
   updateBranch
 );
 
 // Soft delete (deactivate)
-router.delete('/:id', allowRoles('ADMIN'), deactivateBranch);
+router.delete('/:id', allowRoles(ROLES.ADMIN), deactivateBranch);
 
 export default router;

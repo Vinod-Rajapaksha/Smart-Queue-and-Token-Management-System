@@ -6,8 +6,10 @@ import {
   closeQueue,
   getActiveQueue,
   callNextToken,
-  markServed,
-  markNoShow,
+  markServing,
+  markSkipped,
+  markCancelled,
+  markCompleted,
   listQueues,
 } from './service.js';
 
@@ -35,14 +37,24 @@ export const next = asyncHandler(async (req, res) => {
   return new ApiResponse(200, 'Next token called', token).send(res);
 });
 
-export const served = asyncHandler(async (req, res) => {
-  const token = await markServed({ tokenId: req.params.tokenId, userId: req.user?.id });
-  return new ApiResponse(200, 'Token marked served', token).send(res);
+export const serving = asyncHandler(async (req, res) => {
+  const token = await markServing({ tokenId: req.params.tokenId, userId: req.user?.id });
+  return new ApiResponse(200, 'Token marked serving', token).send(res);
 });
 
-export const noShow = asyncHandler(async (req, res) => {
-  const token = await markNoShow({ tokenId: req.params.tokenId, userId: req.user?.id });
-  return new ApiResponse(200, 'Token marked no-show', token).send(res);
+export const skipped = asyncHandler(async (req, res) => {
+  const token = await markSkipped({ tokenId: req.params.tokenId, userId: req.user?.id });
+  return new ApiResponse(200, 'Token marked skipped', token).send(res);
+});
+
+export const cancelled = asyncHandler(async (req, res) => {
+  const token = await markCancelled({ tokenId: req.params.tokenId, userId: req.user?.id });
+  return new ApiResponse(200, 'Token marked cancelled', token).send(res);
+});
+
+export const completed = asyncHandler(async (req, res) => {
+  const token = await markCompleted({ tokenId: req.params.tokenId, userId: req.user?.id });
+  return new ApiResponse(200, 'Token marked completed', token).send(res);
 });
 
 export const list = asyncHandler(async (req, res) => {

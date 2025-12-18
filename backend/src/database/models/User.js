@@ -1,10 +1,6 @@
 import mongoose from 'mongoose';
 
-const { Schema } = mongoose;
-
-const USER_ROLES = ['ADMIN', 'STAFF', 'CUSTOMER'];
-
-const userSchema = new Schema(
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -30,11 +26,11 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: USER_ROLES,
+      enum: ['ADMIN', 'MANAGER', 'STAFF', 'CUSTOMER'],
       default: 'STAFF',
     },
     branch: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'Branch',
       default: null,
     },
@@ -53,4 +49,3 @@ const userSchema = new Schema(
 );
 
 export default mongoose.model('User', userSchema);
-export { USER_ROLES };

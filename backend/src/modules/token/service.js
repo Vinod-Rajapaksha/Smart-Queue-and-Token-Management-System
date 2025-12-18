@@ -1,6 +1,7 @@
 import Token from '../../database/models/Token.js';
 import Queue from '../../database/models/Queue.js';
 import ApiError from '../../core/apiError.js';
+import { TOKEN_STATUS } from '../../core/constants.js';
 
 class TokenService {
   async createToken(userId, branchId, queueId) {
@@ -8,7 +9,7 @@ class TokenService {
     const existingToken = await Token.findOne({
       user: userId,
       branch: branchId,
-      status: { $in: ['CREATED', 'WAITING', 'SERVING'] },
+      status: { $in: [TOKEN_STATUS.CREATED, TOKEN_STATUS.WAITING, TOKEN_STATUS.CALLING, TOKEN_STATUS.SERVING, TOKEN_STATUS.SKIPPED] },
     });
 
     if (existingToken) {
@@ -27,7 +28,7 @@ class TokenService {
       user: userId,
       branch: branchId,
       queue: queueId,
-      status: 'WAITING',
+      status: TOKEN_STATUS.WAITING,
     });
 
     // Push token into queue
@@ -52,9 +53,12 @@ class TokenService {
     }
 
     token.status = status;
-
-    if (status === 'SERVING') token.servedAt = new Date();
-    if (status === 'COMPLETED') token.completedAt = new Date();
+    
+    if (status === TOKEN_STATUS.SERVING) token.servedAt = new Date();
+    if (status === TOKEN_STATUS.COMPLETED) token.completedAt = new Date();
+    if (status === TOKEN_STATUS.CANCELLED) token.cancelledAt = new Date();
+    if (status === TOKEN_STATUS.SKIPPED) token.skippedAt = new Date();
+    if (status === TOKEN_STATUS.CALLING) token.calledAt = new Date();
 
     await token.save();
     return token;

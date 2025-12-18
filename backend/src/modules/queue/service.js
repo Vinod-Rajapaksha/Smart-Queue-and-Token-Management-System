@@ -6,17 +6,7 @@ import Token from '../../database/models/Token.js';
 import Branch from '../../database/models/Branch.js';
 import Counter from '../../database/models/Counter.js';
 
-const QUEUE_STATUS = {
-  ACTIVE: 'ACTIVE',
-  CLOSED: 'CLOSED',
-};
-
-const TOKEN_STATUS = {
-  WAITING: 'WAITING',
-  CALLED: 'CALLED',
-  SERVED: 'SERVED',
-  NO_SHOW: 'NO_SHOW',
-};
+import { QUEUE_STATUS, TOKEN_STATUS } from '../../core/constants.js';
 
 const startOfToday = () => {
   const d = new Date();
@@ -37,7 +27,7 @@ export const openQueue = async ({ branchId, userId }) => {
   // One active queue per day per branch
   const existing = await Queue.findOne({
     branch: branchId,
-    status: QUEUE_STATUS.ACTIVE,
+    status: QUEUE_STATUS.OPEN,
     createdAt: { $gte: startOfToday(), $lte: endOfToday() },
   });
 
@@ -45,7 +35,7 @@ export const openQueue = async ({ branchId, userId }) => {
 
   const queue = await Queue.create({
     branch: branchId,
-    status: QUEUE_STATUS.ACTIVE,
+    status: QUEUE_STATUS.OPEN,
     openedBy: userId,
     openedAt: new Date(),
   });
@@ -56,12 +46,11 @@ export const openQueue = async ({ branchId, userId }) => {
 export const closeQueue = async ({ branchId, userId }) => {
   const queue = await Queue.findOne({
     branch: branchId,
-    status: QUEUE_STATUS.ACTIVE,
+    status: QUEUE_STATUS.OPEN,
     createdAt: { $gte: startOfToday(), $lte: endOfToday() },
   });
 
-  if (!queue) throw new ApiError(404, 'No active queue found for this branch today');
-
+  if (!queue) throw new ApiError(404, 'No open queue found for this branch today');
   queue.status = QUEUE_STATUS.CLOSED;
   queue.closedBy = userId;
   queue.closedAt = new Date();
@@ -73,11 +62,11 @@ export const closeQueue = async ({ branchId, userId }) => {
 export const getActiveQueue = async (branchId) => {
   const queue = await Queue.findOne({
     branch: branchId,
-    status: QUEUE_STATUS.ACTIVE,
+    status: QUEUE_STATUS.OPEN,
     createdAt: { $gte: startOfToday(), $lte: endOfToday() },
   }).populate('branch');
 
-  if (!queue) throw new ApiError(404, 'No active queue found');
+  if (!queue) throw new ApiError(404, 'No open queue found');
   return queue;
 };
 
@@ -85,15 +74,15 @@ export const callNextToken = async ({ branchId, counterId, userId }) => {
   const counter = await Counter.findById(counterId);
   if (!counter) throw new ApiError(404, 'Counter not found');
   if (String(counter.branch) !== String(branchId)) throw new ApiError(400, 'Counter does not belong to this branch');
-  if (counter.isActive === false) throw new ApiError(400, 'Counter is not active');
+  if (counter.isActive === false) throw new ApiError(400, 'Counter is not open');
 
   const queue = await Queue.findOne({
     branch: branchId,
-    status: QUEUE_STATUS.ACTIVE,
+    status: QUEUE_STATUS.OPEN,
     createdAt: { $gte: startOfToday(), $lte: endOfToday() },
   });
 
-  if (!queue) throw new ApiError(404, 'No active queue found for this branch today');
+  if (!queue) throw new ApiError(404, 'No open queue found for this branch today');
 
   // Use transaction to reduce race conditions (two counters calling next at same time)
   const session = await mongoose.startSession();
@@ -105,12 +94,12 @@ export const callNextToken = async ({ branchId, counterId, userId }) => {
       queue: queue._id,
       status: TOKEN_STATUS.WAITING,
     })
-      .sort({ number: 1, createdAt: 1 })
+      .sort({ tokenNumber: 1, createdAt: 1 })
       .session(session);
 
     if (!token) throw new ApiError(404, 'No waiting tokens');
 
-    token.status = TOKEN_STATUS.CALLED;
+    token.status = TOKEN_STATUS.CALLING;
     token.calledAt = new Date();
     token.calledBy = userId;
     token.counter = counterId;
@@ -132,15 +121,15 @@ export const callNextToken = async ({ branchId, counterId, userId }) => {
   }
 };
 
-export const markServed = async ({ tokenId, userId }) => {
+export const markServing = async ({ tokenId, userId }) => {
   const token = await Token.findById(tokenId);
   if (!token) throw new ApiError(404, 'Token not found');
 
-  if (![TOKEN_STATUS.CALLED, TOKEN_STATUS.WAITING].includes(token.status)) {
-    throw new ApiError(400, `Token cannot be marked served from status: ${token.status}`);
+  if (![TOKEN_STATUS.CALLING].includes(token.status)) {
+    throw new ApiError(400, `Token cannot be marked serving from status: ${token.status}`);
   }
 
-  token.status = TOKEN_STATUS.SERVED;
+  token.status = TOKEN_STATUS.SERVING;
   token.servedAt = new Date();
   token.servedBy = userId;
 
@@ -148,17 +137,49 @@ export const markServed = async ({ tokenId, userId }) => {
   return token;
 };
 
-export const markNoShow = async ({ tokenId, userId }) => {
+export const markSkipped = async ({ tokenId, userId }) => {
   const token = await Token.findById(tokenId);
   if (!token) throw new ApiError(404, 'Token not found');
 
-  if (![TOKEN_STATUS.CALLED].includes(token.status)) {
-    throw new ApiError(400, `Token cannot be marked no-show from status: ${token.status}`);
+  if (![TOKEN_STATUS.CALLING].includes(token.status)) {
+    throw new ApiError(400, `Token cannot be marked skipped from status: ${token.status}`);
   }
 
-  token.status = TOKEN_STATUS.NO_SHOW;
-  token.noShowAt = new Date();
-  token.noShowBy = userId;
+  token.status = TOKEN_STATUS.SKIPPED;
+  token.skippedAt = new Date();
+  token.skippedBy = userId;
+
+  await token.save();
+  return token;
+};
+
+export const markCancelled = async ({ tokenId, userId }) => {
+  const token = await Token.findById(tokenId);
+  if (!token) throw new ApiError(404, 'Token not found');
+
+  if (![TOKEN_STATUS.SKIPPED, TOKEN_STATUS.CALLING].includes(token.status)) {
+    throw new ApiError(400, `Token cannot be marked cancelled from status: ${token.status}`);
+  }
+
+  token.status = TOKEN_STATUS.CANCELLED;
+  token.cancelledAt = new Date();
+  token.cancelledBy = userId;
+
+  await token.save();
+  return token;
+};
+
+export const markCompleted = async ({ tokenId, userId }) => {
+  const token = await Token.findById(tokenId);
+  if (!token) throw new ApiError(404, 'Token not found');
+
+  if (![TOKEN_STATUS.SERVING].includes(token.status)) {
+    throw new ApiError(400, `Token cannot be marked completed from status: ${token.status}`);
+  }
+
+  token.status = TOKEN_STATUS.COMPLETED;
+  token.completedAt = new Date();
+  token.completedBy = userId;
 
   await token.save();
   return token;
