@@ -121,8 +121,8 @@ describe("Counter Routes (Integration)", () => {
     expect(res.statusCode).toBe(409);
   });
 
-  it("GET / should allow STAFF and return paginated result", async () => {
-    const staff = await createUser({ email: "staff2@test.com", role: "STAFF" });
+  it("GET / should allow MANAGER and return paginated result", async () => {
+    const manager = await createUser({ email: "manager@test.com", role: "MANAGER" });
     const branch = await createBranch({ code: "B4" });
 
     await Counter.create({ branch: branch._id, name: "C1", code: "C1" });
@@ -130,7 +130,7 @@ describe("Counter Routes (Integration)", () => {
 
     const res = await request(app)
       .get(`${base}/?branchId=${branch._id.toString()}&page=1&limit=10`)
-      .set("Authorization", `Bearer ${tokenFor(staff)}`);
+      .set("Authorization", `Bearer ${tokenFor(manager)}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.data).toHaveProperty("items");
@@ -138,13 +138,12 @@ describe("Counter Routes (Integration)", () => {
     expect(Array.isArray(res.body.data.items)).toBe(true);
   });
 
-  it("GET /:id should allow STAFF and return 404 if not found", async () => {
-    const staff = await createUser({ email: "staff3@test.com", role: "STAFF" });
+  it("GET /:id should allow ADMIN and return 404 if not found", async () => {
+    const admin = await createUser({ email: "admin@test.com", role: "ADMIN" });
 
     const res = await request(app)
       .get(`${base}/507f1f77bcf86cd799439011`)
-      .set("Authorization", `Bearer ${tokenFor(staff)}`);
-
+      .set("Authorization", `Bearer ${tokenFor(admin)}`);
     expect(res.statusCode).toBe(404);
   });
 

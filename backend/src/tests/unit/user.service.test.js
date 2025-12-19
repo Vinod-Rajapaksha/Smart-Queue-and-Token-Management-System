@@ -1,6 +1,9 @@
 import { jest } from "@jest/globals";
-import User, { USER_ROLES } from "../../database/models/User.js";
+import User from "../../database/models/User.js";
 import Branch from "../../database/models/Branch.js";
+import { ROLES } from "../../core/constants.js";
+
+const ROLE_VALUES = Object.values(ROLES);
 
 jest.unstable_mockModule("../../utils/password.js", () => ({
   hashPassword: jest.fn(),
@@ -25,7 +28,7 @@ describe("User Service (Unit) - ESM", () => {
       const badRole = "NOT_A_ROLE";
 
       // ensure test remains valid even if roles change
-      expect(USER_ROLES.includes(badRole)).toBe(false);
+      expect(ROLE_VALUES.includes(badRole)).toBe(false);
 
       await expect(
         userService.createUser({
