@@ -4,6 +4,8 @@ import Branch from '../../database/models/Branch.js';
 import { hashPassword } from '../../utils/password.js';
 import { ROLES } from '../../core/constants.js';
 
+const ROLE_VALUES = Object.values(ROLES);
+
 export const listUsers = async ({ role, isActive, branchId } = {}) => {
   const filter = {};
 
@@ -67,7 +69,7 @@ export const createUser = async ({
   branch,
 }) => {
   
-  if (!ROLES.includes(role)) {
+  if (!ROLE_VALUES.includes(role)) {
     throw new ApiError(400, 'Invalid role');
   }
 
@@ -111,7 +113,7 @@ export const updateUser = async (userId, updates) => {
     }
   }
 
-  if (updateData.role && !ROLES.includes(updateData.role)) {
+  if (updateData.role && !ROLE_VALUES.includes(updateData.role)) {
     throw new ApiError(400, 'Invalid role');
   }
 

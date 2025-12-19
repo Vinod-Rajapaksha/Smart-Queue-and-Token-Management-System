@@ -11,8 +11,8 @@ const queueSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['ACTIVE', 'CLOSED'],
-      default: 'ACTIVE',
+      enum: ['OPEN', 'CLOSED'],
+      default: 'OPEN',
       index: true,
     },
 
