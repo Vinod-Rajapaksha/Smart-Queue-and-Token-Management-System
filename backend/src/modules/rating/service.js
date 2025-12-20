@@ -1,15 +1,16 @@
 import ApiError from '../../core/apiError.js';
 import ServiceRating from '../../database/models/ServiceRating.js';
 import Token from '../../database/models/Token.js';
+import { TOKEN_STATUS } from '../../core/constants.js';
 
 export const createRating = async ({ tokenId, rating, comment, userId }) => {
   // Token must exist
   const token = await Token.findById(tokenId);
   if (!token) throw new ApiError(404, 'Token not found');
 
-  // Token must be served
-  if (token.status !== 'SERVED') {
-    throw new ApiError(400, 'Rating allowed only after token is served');
+  // Token must be completed
+  if (token.status !== TOKEN_STATUS.COMPLETED) {
+    throw new ApiError(400, 'Rating allowed only after token is completed');
   }
 
   // Prevent duplicate ratings
@@ -19,9 +20,9 @@ export const createRating = async ({ tokenId, rating, comment, userId }) => {
   // Create rating linked to token metadata
   const doc = await ServiceRating.create({
     tokenId: token._id,
-    branchId: token.branchId,
-    queueId: token.queueId,
-    counterId: token.counterId || null,
+    branchId: token.branch._id,
+    queueId: token.queue._id,
+    counterId: token.counter._id,
     rating: Number(rating),
     comment: comment ? String(comment) : '',
     createdBy: userId || null,
