@@ -110,7 +110,7 @@ describe("Rating Routes (Integration)", () => {
     });
   };
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await Promise.all([
       ServiceRating.deleteMany({}),
       Token.deleteMany({}),
@@ -378,9 +378,9 @@ describe("Rating Routes (Integration)", () => {
         .set(authHeaderFor(admin))
         .send();
 
-     // expect(res.statusCode).toBe(200);
-      //expect(res.body.data.count).toBe(2);
-      //expect(res.body.data.stars5).toBe(1);
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.count).toBe(2);
+      expect(res.body.data.stars5).toBe(1);
       expect(res.body.data.stars4).toBe(1);
     });
   });
