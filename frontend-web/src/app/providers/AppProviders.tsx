@@ -3,13 +3,15 @@ import { RouterProvider } from "react-router-dom";
 import { store } from "../../store";
 import { router } from "../routes";
 import ToastProvider from "./ToastProvider";
+import AuthProvider from "./AuthProvider";
 
 export default function AppProviders() {
   return (
     <Provider store={store}>
-      <ToastProvider>
-        <RouterProvider router={router} />
-      </ToastProvider>
+      <AuthProvider>
+        <ToastProvider/>
+          <RouterProvider router={router} />
+      </AuthProvider>
     </Provider>
   );
 }
