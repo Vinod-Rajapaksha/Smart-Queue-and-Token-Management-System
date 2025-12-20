@@ -8,6 +8,9 @@ export const ROLES = {
 
 export type ROLES = (typeof ROLES)[keyof typeof ROLES];
 
+// ADMIN PORTAL ROLES
+export const ADMIN_PORTAL_ROLES: ROLES[] = ["ADMIN", "MANAGER", "STAFF"];
+
 // QUEUE STATUS
 export const QUEUE_STATUS = {
   OPEN: "OPEN",
