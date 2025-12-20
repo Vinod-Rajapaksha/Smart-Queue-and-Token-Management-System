@@ -2,6 +2,7 @@ import ApiError from '../../core/apiError.js';
 import ServiceRating from '../../database/models/ServiceRating.js';
 import Token from '../../database/models/Token.js';
 import { TOKEN_STATUS } from '../../core/constants.js';
+import mongoose from 'mongoose';
 
 export const createRating = async ({ tokenId, rating, comment, userId }) => {
   // Token must exist
@@ -63,8 +64,8 @@ export const listRatings = async ({ branchId, queueId, page = 1, limit = 20 }) =
 
 export const getRatingSummary = async ({ branchId, queueId }) => {
   const match = {};
-  if (branchId) match.branchId = branchId;
-  if (queueId) match.queueId = queueId;
+  if (branchId) match.branchId = new mongoose.Types.ObjectId(branchId);
+  if (queueId) match.queueId = new mongoose.Types.ObjectId(queueId);
 
   const result = await ServiceRating.aggregate([
     { $match: match },
