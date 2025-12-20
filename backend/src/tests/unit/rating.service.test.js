@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+import mongoose from "mongoose";
 
 jest.unstable_mockModule("../../database/models/Token.js", () => ({
   default: {
@@ -177,6 +178,9 @@ describe("Rating Service (Unit) - ESM", () => {
   });
 
   describe("getRatingSummary()", () => {
+    const branchId = new mongoose.Types.ObjectId().toString();
+    const queueId = new mongoose.Types.ObjectId().toString();
+
     it("should return summary when aggregation returns data", async () => {
       ServiceRating.aggregate.mockResolvedValue([
         {
@@ -191,8 +195,8 @@ describe("Rating Service (Unit) - ESM", () => {
       ]);
 
       const out = await ratingService.getRatingSummary({
-        branchId: "b1",
-        queueId: "q1",
+        branchId,
+        queueId,
       });
 
       expect(out).toMatchObject({
@@ -206,8 +210,8 @@ describe("Rating Service (Unit) - ESM", () => {
       ServiceRating.aggregate.mockResolvedValue([]);
 
       const out = await ratingService.getRatingSummary({
-        branchId: "b1",
-        queueId: "q1",
+        branchId,
+        queueId,
       });
 
       expect(out).toEqual({
