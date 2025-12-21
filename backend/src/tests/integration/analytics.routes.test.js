@@ -63,14 +63,15 @@ beforeAll(async () => {
     
   });
 
- analyticsRouter = (await import("../../modules/analytics/route.js")).default;
-
+  analyticsRouter = (await import("../../modules/analytics/routes.js")).default;
   Token = (await import("../../database/models/Token.js")).default;
   ServiceRating = (await import("../../database/models/ServiceRating.js")).default;
+  errorHandler = (await import("../../middleware/error.js")).default; 
 
   app = express();
   app.use(express.json());
   app.use("/api/analytics", analyticsRouter);
+  app.use(errorHandler);
 });
 
 afterEach(async () => {
