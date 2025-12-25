@@ -42,7 +42,7 @@ export default function TopBar({
       <div className="flex items-center gap-3">
         {/* Mobile Toggle Button */}
         <button
-          className="md:hidden relative p-2 overflow-hidden rounded-xl border border-gray-800 bg-gray-900/40 hover:bg-gray-900/70 transition-all duration-200 hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] active:scale-95"
+          className="md:hidden relative p-2 overflow-hidden rounded-xl border border-gray-800 bg-gray-900/40 hover:bg-gray-900/70 transition-all duration-200 hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] active:scale-95 cursor-pointer"
           onClick={onOpenMobileSidebar}
           aria-label="Open sidebar"
         >
@@ -61,7 +61,7 @@ export default function TopBar({
 
         {/* Desktop Toggle Button */}
         <button
-          className="hidden md:inline-flex relative p-2.5 overflow-hidden rounded-xl border border-gray-800 bg-gray-900/40 hover:bg-gray-900/70 transition-all duration-200 group hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] active:scale-95"
+          className="hidden md:inline-flex relative p-2.5 overflow-hidden rounded-xl border border-gray-800 bg-gray-900/40 hover:bg-gray-900/70 transition-all duration-200 group hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] active:scale-95 cursor-pointer"
           onClick={onToggleCollapse}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           type="button"
@@ -130,31 +130,37 @@ export default function TopBar({
       {/* Right */}
       <div className="flex items-center gap-2">
         <button
-          className="p-2 rounded-xl border border-gray-800 bg-gray-900/40 hover:bg-gray-900/70 transition-all duration-200 group hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] active:scale-95 relative"
+          className="p-2 rounded-xl border border-gray-800 bg-gray-900/40 hover:bg-gray-900/70 transition-all duration-200 group hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] active:scale-95 relative cursor-pointer"
           aria-label="Notifications"
         >
           <Bell className="w-5 h-5 text-gray-200" />
           <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
         </button>
-
-        <div className="hidden sm:flex items-center gap-2 pl-2">
-          <div className="group flex items-center gap-2 p-2 rounded-xl border border-gray-800 bg-gray-900/40 transition-all duration-200 hover:bg-gray-900/70 hover:border-cyan-500/30 hover:shadow-[0_0_18px_rgba(34,211,238,0.15)]">
-            <UserCircle2 className="w-5 h-5 text-gray-200 transition group-hover:text-cyan-300" />    
-            <div className="leading-tight">
-              <div className="text-sm text-white font-medium">
-                {user?.name ?? "Admin"}
-              </div>
-              <div className="text-xs text-gray-400 transition group-hover:text-gray-300">
-                {user?.email ?? "admin@zeroq.com"}
+        <button
+          onClick={() => navigate("/admin/profile")}
+          role="button"
+          tabIndex={0}
+          className="cursor-pointer"
+        >
+          <div className="hidden sm:flex items-center gap-2 pl-2">
+            <div className="group flex items-center gap-2 p-2 rounded-xl border border-gray-800 bg-gray-900/40 transition-all duration-200 hover:bg-gray-900/70 hover:border-cyan-500/30 hover:shadow-[0_0_18px_rgba(34,211,238,0.15)]">
+              <UserCircle2 className="w-5 h-5 text-gray-200 transition group-hover:text-cyan-300" />    
+              <div className="leading-tight">
+                <div className="text-sm text-white font-medium">
+                  {user?.name ?? "Admin"}
+                </div>
+                <div className="text-xs text-gray-400 transition group-hover:text-gray-300">
+                  {user?.email ?? "admin@zeroq.com"}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </button>
         <button
           onClick={() => setConfirmOpen(true)}
           aria-label="Logout"
           type="button"
-          className="group p-2 rounded-xl border border-gray-800 bg-gray-900/40 transition-all duration-200 hover:bg-red-500/10 hover:border-red-500/30 hover:shadow-[0_0_18px_rgba(239,68,68,0.2)] active:scale-95"
+          className="group p-2 rounded-xl border border-gray-800 bg-gray-900/40 transition-all duration-200 hover:bg-red-500/10 hover:border-red-500/30 hover:shadow-[0_0_18px_rgba(239,68,68,0.2)] active:scale-95 cursor-pointer"
         >
           <LogOut className="w-5 h-5 text-gray-200 transition group-hover:text-red-400" />
         </button>
@@ -170,7 +176,7 @@ export default function TopBar({
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleLogoutConfirmed}
       />
-      
+
     </header>
   );
 }
