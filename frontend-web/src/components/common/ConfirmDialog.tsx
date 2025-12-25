@@ -79,7 +79,7 @@ export default function ConfirmDialog({
           <div className="mt-6 flex justify-end gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-gray-800 bg-gray-900/40 hover:bg-gray-900/70 text-gray-200 transition"
+              className="px-4 py-2 rounded-xl border border-gray-800 bg-gray-900/40 hover:bg-gray-800/70 text-gray-200 transition cursor-pointer"
               type="button"
             >
               {cancelText}
@@ -91,7 +91,7 @@ export default function ConfirmDialog({
                 onClose();
               }}
               className={[
-                "px-4 py-2 rounded-xl font-medium transition",
+                "px-4 py-2 rounded-xl font-medium transition cursor-pointer",
                 danger ? "border border-red-500/30 bg-red-500/15 hover:bg-red-500/25 text-red-200" : "border border-cyan-500/30 bg-cyan-500/15 hover:bg-cyan-500/25 text-white",
               ].join(" ")}
               type="button"
