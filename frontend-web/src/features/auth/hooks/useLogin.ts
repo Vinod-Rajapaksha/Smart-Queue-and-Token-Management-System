@@ -38,7 +38,7 @@ export function useLogin() {
         })
       );
 
-      navigate("/", { replace: true });
+      navigate("/admin", { replace: true });
       return true;
     } catch (e) {
       const message = e instanceof Error ? e.message : "Login failed";
