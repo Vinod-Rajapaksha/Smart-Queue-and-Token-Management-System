@@ -25,7 +25,7 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
       { label: "Ratings", to: "/admin/ratings", icon: <Star className="w-5 h-5" /> },
       { label: "Analytics", to: "/admin/analytics", icon: <BarChart3 className="w-5 h-5" /> },
       { label: "Users", to: "/admin/users", icon: <Users className="w-5 h-5" /> },
-      { label: "Settings", to: "/admin/settings", icon: <Settings className="w-5 h-5" /> },
+      { label: "Settings", to: "/admin/profile", icon: <Settings className="w-5 h-5" /> },
     ],
     []
   );
