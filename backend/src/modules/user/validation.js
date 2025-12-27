@@ -180,3 +180,21 @@ export const validateResetPassword = (req, res, next) => {
 
   next();
 };
+
+export const validateChangeOwnPassword = (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || typeof currentPassword !== "string") {
+    return res.status(400).json({ success: false, message: "Current password is required" });
+  }
+
+  if (!newPassword || !isStrongPassword(newPassword)) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "New password must be at least 8 chars and include uppercase, lowercase, number, and special character",
+    });
+  }
+
+  next();
+};
