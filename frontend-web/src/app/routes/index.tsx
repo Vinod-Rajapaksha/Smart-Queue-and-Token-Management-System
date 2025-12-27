@@ -7,6 +7,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
 import { ADMIN_PORTAL_ROLES } from "../../types/enums";
 import AdminLayout from "../../layouts/AdminLayout";
+import ProfilePage from "../../features/profile/pages/ProfilePage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -15,13 +16,15 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      {
+      { 
+        path: "/admin",
         element: <AdminLayout />,
         children: [
           {
             element: <RoleRoute allowed={ADMIN_PORTAL_ROLES} />,
             children: [
-              { path: "/", element: <HomePage /> },
+              { index: true, element: <HomePage /> },
+              { path: "profile", element: <ProfilePage /> },
             ],
           },
         ],
