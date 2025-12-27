@@ -91,3 +91,12 @@ export const resetUserPassword = asyncHandler(async (req, res) => {
 
   return new ApiResponse(200, 'Password reset successfully', null).send(res);
 });
+
+export const changeMyPassword = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { currentPassword, newPassword } = req.body;
+
+  await userService.changeOwnPassword(userId, currentPassword, newPassword);
+
+  return new ApiResponse(200, 'Password updated successfully', null).send(res);
+});
