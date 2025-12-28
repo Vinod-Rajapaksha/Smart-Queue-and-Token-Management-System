@@ -1,7 +1,7 @@
 import ApiError from '../../core/apiError.js';
 import User from '../../database/models/User.js';
 import Branch from '../../database/models/Branch.js';
-import { hashPassword } from '../../utils/password.js';
+import { hashPassword, comparePassword } from '../../utils/password.js';
 import { ROLES } from '../../core/constants.js';
 
 const ROLE_VALUES = Object.values(ROLES);
@@ -214,6 +214,19 @@ export const resetUserPassword = async (userId, newPassword) => {
   if (!user) {
     throw new ApiError(404, 'User not found');
   }
+
+  return true;
+};
+
+export const changeOwnPassword = async (userId, currentPassword, newPassword) => {
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, 'User not found');
+
+  const ok = await comparePassword(currentPassword, user.password);
+  if (!ok) throw new ApiError(400, 'Current password is incorrect');
+
+  user.password = await hashPassword(newPassword);
+  await user.save();
 
   return true;
 };

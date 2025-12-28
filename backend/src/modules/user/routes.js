@@ -7,6 +7,7 @@ import {
   validateUpdateOwnProfile,
   validateStatusUpdate,
   validateResetPassword,
+  validateChangeOwnPassword,
 } from './validation.js';
 import {
   getUsers,
@@ -18,6 +19,7 @@ import {
   updateMe,
   updateUserStatus,
   resetUserPassword,
+  changeMyPassword,
 } from './controller.js';
 import { ROLES } from '../../core/constants.js';
 
@@ -27,6 +29,7 @@ router.use(auth);
 
 router.get('/me', getMe);
 router.patch('/me', validateUpdateOwnProfile, updateMe);
+router.patch('/me/password', validateChangeOwnPassword, changeMyPassword);
 
 router.get('/', allowRoles(ROLES.ADMIN), getUsers);
 router.get('/staff', allowRoles(ROLES.ADMIN), getStaff);
