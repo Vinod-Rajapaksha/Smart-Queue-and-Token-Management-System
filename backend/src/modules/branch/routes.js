@@ -8,6 +8,7 @@ import {
   getBranchById,
   updateBranch,
   deactivateBranch,
+  activateBranch,
 } from './controller.js';
 import {
   validateCreateBranch,
@@ -38,5 +39,7 @@ router.patch(
 
 // Soft delete (deactivate)
 router.delete('/:id', allowRoles(ROLES.ADMIN), deactivateBranch);
+
+router.patch('/:id/activate', allowRoles(ROLES.ADMIN), activateBranch);
 
 export default router;

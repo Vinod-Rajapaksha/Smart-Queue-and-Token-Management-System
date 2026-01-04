@@ -6,6 +6,7 @@ import {
   getBranchByIdService,
   updateBranchService,
   deactivateBranchService,
+  activateBranchService,
 } from './service.js';
 
 export const createBranch = asyncHandler(async (req, res) => {
@@ -41,6 +42,15 @@ export const deactivateBranch = asyncHandler(async (req, res) => {
   const branch = await deactivateBranchService(id);
 
   return new ApiResponse(200, 'Branch deactivated successfully', branch).send(
+    res
+  );
+});
+
+export const activateBranch = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const branch = await activateBranchService(id);
+
+  return new ApiResponse(200, 'Branch activated successfully', branch).send(
     res
   );
 });
