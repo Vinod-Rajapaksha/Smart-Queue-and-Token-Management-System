@@ -24,7 +24,7 @@ export const createCounter = async ({ branchId, name, code, services }) => {
     ...(services ? { services } : {}),
   });
 
-  return counter;
+  return await Counter.findById(counter._id).populate('branch', 'name code');
 };
 
 export const listCounters = async (query = {}) => {
@@ -95,7 +95,7 @@ export const updateCounter = async (id, payload = {}) => {
   }
 
   await counter.save();
-  return counter;
+  return await Counter.findById(counter._id).populate('branch', 'name code');
 };
 
 export const setCounterStatus = async (id, isActive) => {
@@ -104,15 +104,12 @@ export const setCounterStatus = async (id, isActive) => {
 
   counter.isActive = isActive;
   await counter.save();
-  return counter;
+  return await Counter.findById(counter._id).populate('branch', 'name code');
 };
 
-// soft delete
 export const deleteCounter = async (id) => {
-  const counter = await Counter.findById(id);
+  const counter = await Counter.findByIdAndDelete(id);
   if (!counter) throw new ApiError(404, 'Counter not found');
 
-  counter.isActive = false;
-  await counter.save();
   return counter;
 };
