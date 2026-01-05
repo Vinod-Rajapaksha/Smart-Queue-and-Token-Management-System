@@ -9,6 +9,7 @@ import { ADMIN_PORTAL_ROLES } from "../../types/enums";
 import AdminLayout from "../../layouts/AdminLayout";
 import ProfilePage from "../../features/profile/pages/ProfilePage";
 import { BranchListPage, BranchDetailsPage } from "../../features/branch";
+import { CounterPage } from "../../features/counter";
 
 export const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/login" replace /> },
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
               { path: "profile", element: <ProfilePage /> },
               { path: "branches", element: <BranchListPage /> },
               { path: "branches/:id", element: <BranchDetailsPage /> },
+              { path: "counters", element: <CounterPage /> },
             ],
           },
         ],
