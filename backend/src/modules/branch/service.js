@@ -75,3 +75,17 @@ export const deactivateBranchService = async (id) => {
 
   return branch;
 };
+
+export const activateBranchService = async (id) => {
+  const branch = await Branch.findByIdAndUpdate(
+    id,
+    { isActive: true },
+    { new: true }
+  );
+
+  if (!branch) {
+    throw new ApiError(404, 'Branch not found');
+  }
+
+  return branch;
+};
