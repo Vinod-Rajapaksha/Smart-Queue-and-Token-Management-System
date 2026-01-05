@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import HomePage from "../../pages/HomePage";
 import NotFoundPage from "../../pages/NotFoundPage";
 import UnauthorizedPage from "../../pages/UnauthorizedPage";
@@ -8,8 +8,10 @@ import RoleRoute from "./RoleRoute";
 import { ADMIN_PORTAL_ROLES } from "../../types/enums";
 import AdminLayout from "../../layouts/AdminLayout";
 import ProfilePage from "../../features/profile/pages/ProfilePage";
+import { BranchListPage, BranchDetailsPage } from "../../features/branch";
 
 export const router = createBrowserRouter([
+  { path: "/", element: <Navigate to="/login" replace /> },
   { path: "/login", element: <LoginPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
 
@@ -25,6 +27,8 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <HomePage /> },
               { path: "profile", element: <ProfilePage /> },
+              { path: "branches", element: <BranchListPage /> },
+              { path: "branches/:id", element: <BranchDetailsPage /> },
             ],
           },
         ],
