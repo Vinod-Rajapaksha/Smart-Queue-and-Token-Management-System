@@ -46,7 +46,7 @@ export default function BranchTable({
         },
         {
           header: "Actions",
-          className: "w-[180px] text-right",
+          className: "w-[180px] text-center",
           cell: (row: Branch) => (
             <div className="flex items-center justify-end gap-2 whitespace-nowrap">
               <Button
