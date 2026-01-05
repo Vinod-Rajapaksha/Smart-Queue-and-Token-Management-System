@@ -1,3 +1,5 @@
+import { Loader2 } from "lucide-react";
+
 type Props = {
   label?: string;
 };
@@ -7,9 +9,10 @@ export default function Loading({ label = "Loading..." }: Props) {
     <div
       role="status"
       aria-live="polite"
-      style={{ padding: 12, textAlign: "center" }}
+      className="flex items-center justify-center gap-2 rounded-xl border border-gray-700/50 bg-gray-900/40 px-4 py-3 text-sm text-gray-300"
     >
-      {label}
+      <Loader2 className="h-4 w-4 animate-spin text-cyan-400" />
+      <span>{label}</span>
     </div>
   );
 }

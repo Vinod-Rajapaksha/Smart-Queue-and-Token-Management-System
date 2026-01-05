@@ -1,28 +1,24 @@
+import type { ReactNode } from "react";
+
 type Props = {
   title: string;
-  subtitle?: string;
-  right?: React.ReactNode;
+  subtitle?: ReactNode;
+  right?: ReactNode;
 };
 
 export default function PageHeader({ title, subtitle, right }: Props) {
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 12,
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        marginBottom: 16,
-      }}
-    >
+    <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h2 style={{ margin: 0 }}>{title}</h2>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+          {title}
+        </h2>
         {subtitle ? (
-          <p style={{ marginTop: 6, marginBottom: 0 }}>{subtitle}</p>
+          <div className="mt-1 text-sm text-gray-400">{subtitle}</div>
         ) : null}
       </div>
 
-      {right ? <div>{right}</div> : null}
+      {right ? <div className="shrink-0">{right}</div> : null}
     </div>
   );
 }
