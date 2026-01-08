@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, GitBranch, Layers3, Users, Star, Ticket, BarChart3, Settings } from "lucide-react";
+import { LayoutDashboard, GitBranch, Layers3, Users, Star, Ticket, BarChart3, Settings, ListOrdered, Radio } from "lucide-react";
 
 export type NavItem = {
   label: string;
@@ -20,7 +20,8 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
       { label: "Dashboard", to: "/admin", icon: <LayoutDashboard className="w-5 h-5" /> },
       { label: "Branches", to: "/admin/branches", icon: <GitBranch className="w-5 h-5" /> },
       { label: "Counters", to: "/admin/counters", icon: <Layers3 className="w-5 h-5" /> },
-      { label: "Queues", to: "/admin/queues", icon: <Ticket className="w-5 h-5" /> },
+      { label: "Queues", to: "/admin/queues", icon: <ListOrdered className="w-5 h-5" /> },
+      { label: "Live Queues", to: "/admin/queues/live", icon: <Radio className="w-5 h-5" /> },
       { label: "Tokens", to: "/admin/tokens", icon: <Ticket className="w-5 h-5" /> },
       { label: "Ratings", to: "/admin/ratings", icon: <Star className="w-5 h-5" /> },
       { label: "Analytics", to: "/admin/analytics", icon: <BarChart3 className="w-5 h-5" /> },
@@ -78,6 +79,7 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
           <NavLink
             key={item.to}
             to={item.to}
+            end={item.to === "/admin" || item.to === "/admin/queues"}
             onClick={onNavigate}
             className={({ isActive }) =>
               [
