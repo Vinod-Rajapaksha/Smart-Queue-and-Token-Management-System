@@ -3,7 +3,6 @@ import ApiError from '../../core/apiError.js';
 
 import Queue from '../../database/models/Queue.js';
 import Token from '../../database/models/Token.js';
-import Branch from '../../database/models/Branch.js';
 import Counter from '../../database/models/Counter.js';
 
 import { QUEUE_STATUS, TOKEN_STATUS } from '../../core/constants.js';
@@ -20,13 +19,13 @@ const endOfToday = () => {
   return d;
 };
 
-export const openQueue = async ({ branchId, userId }) => {
-  const branch = await Branch.findById(branchId);
-  if (!branch) throw new ApiError(404, 'Branch not found');
+export const openQueue = async ({ counterId, userId }) => {
+  const counter = await Counter.findById(counterId);
+  if (!counter) throw new ApiError(404, 'Counter not found');
 
-  // One active queue per day per branch
+  // One active queue per day per counter
   const existing = await Queue.findOne({
-    branch: branchId,
+    counter: counterId,
     status: QUEUE_STATUS.OPEN,
     createdAt: { $gte: startOfToday(), $lte: endOfToday() },
   });
@@ -34,7 +33,8 @@ export const openQueue = async ({ branchId, userId }) => {
   if (existing) return existing;
 
   const queue = await Queue.create({
-    branch: branchId,
+    branch: counter.branch,
+    counter: counterId,
     status: QUEUE_STATUS.OPEN,
     openedBy: userId,
     openedAt: new Date(),
@@ -43,14 +43,14 @@ export const openQueue = async ({ branchId, userId }) => {
   return queue;
 };
 
-export const closeQueue = async ({ branchId, userId }) => {
+export const closeQueue = async ({ counterId, userId }) => {
   const queue = await Queue.findOne({
-    branch: branchId,
+    counter: counterId,
     status: QUEUE_STATUS.OPEN,
     createdAt: { $gte: startOfToday(), $lte: endOfToday() },
   });
 
-  if (!queue) throw new ApiError(404, 'No open queue found for this branch today');
+  if (!queue) throw new ApiError(404, 'No open queue found for this counter today');
   queue.status = QUEUE_STATUS.CLOSED;
   queue.closedBy = userId;
   queue.closedAt = new Date();
@@ -59,30 +59,31 @@ export const closeQueue = async ({ branchId, userId }) => {
   return queue;
 };
 
-export const getActiveQueue = async (branchId) => {
+export const getActiveQueue = async (counterId) => {
   const queue = await Queue.findOne({
-    branch: branchId,
+    counter: counterId,
     status: QUEUE_STATUS.OPEN,
     createdAt: { $gte: startOfToday(), $lte: endOfToday() },
-  }).populate('branch');
+  }).populate("counter");
 
   if (!queue) throw new ApiError(404, 'No open queue found');
   return queue;
 };
 
-export const callNextToken = async ({ branchId, counterId, userId }) => {
+export const callNextToken = async ({ counterId, userId }) => {
   const counter = await Counter.findById(counterId);
   if (!counter) throw new ApiError(404, 'Counter not found');
-  if (String(counter.branch) !== String(branchId)) throw new ApiError(400, 'Counter does not belong to this branch');
   if (counter.isActive === false) throw new ApiError(400, 'Counter is not open');
 
+  const branchId = counter.branch;
+
   const queue = await Queue.findOne({
-    branch: branchId,
+    counter: counterId,
     status: QUEUE_STATUS.OPEN,
     createdAt: { $gte: startOfToday(), $lte: endOfToday() },
   });
 
-  if (!queue) throw new ApiError(404, 'No open queue found for this branch today');
+  if (!queue) throw new ApiError(404, 'No open queue found for this counter today');
 
   // Use transaction to reduce race conditions (two counters calling next at same time)
   const session = await mongoose.startSession();
@@ -185,15 +186,17 @@ export const markCompleted = async ({ tokenId, userId }) => {
   return token;
 };
 
-export const listQueues = async ({ branchId, status, page = 1, limit = 10 }) => {
+export const listQueues = async ({ branchId, counterId, status, page = 1, limit = 10 }) => {
   const q = {};
+
   if (branchId) q.branch = branchId;
+  if (counterId) q.counter = counterId;
   if (status) q.status = status;
 
   const skip = (Number(page) - 1) * Number(limit);
 
   const [items, total] = await Promise.all([
-    Queue.find(q).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).populate('branch'),
+    Queue.find(q).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).populate('counter'),
     Queue.countDocuments(q),
   ]);
 
