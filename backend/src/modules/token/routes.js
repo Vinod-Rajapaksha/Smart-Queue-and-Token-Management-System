@@ -3,6 +3,7 @@ import {
   createToken,
   getMyTokens,
   updateTokenStatus,
+  listTokens,
 } from './controller.js';
 import { auth } from '../../middleware/auth.js';
 import { allowRoles } from '../../middleware/role.js';
@@ -17,5 +18,6 @@ const router = express.Router();
 router.post('/', auth, validateCreateToken, createToken);
 router.get('/me', auth, getMyTokens);
 router.patch('/:id/status', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), validateUpdateTokenStatus, updateTokenStatus);
+router.get('/', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), listTokens);
 
 export default router;

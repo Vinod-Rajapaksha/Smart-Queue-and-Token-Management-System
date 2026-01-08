@@ -25,3 +25,8 @@ export const updateTokenStatus = asyncHandler(async (req, res) => {
 
   new ApiResponse(200, 'Token status updated', token).send(res);
 });
+
+export const listTokens = asyncHandler(async (req, res) => {
+  const tokens = await tokenService.listTokens(req.query);
+  new ApiResponse(200, 'Tokens fetched', tokens).send(res);
+});

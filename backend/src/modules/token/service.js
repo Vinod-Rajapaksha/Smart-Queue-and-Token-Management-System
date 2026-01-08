@@ -63,6 +63,39 @@ class TokenService {
     await token.save();
     return token;
   }
+
+  async listTokens(query) {
+    const { branchId, counterId, queueId, status, date } = query;
+
+    const filter = {};
+
+    if (branchId) filter.branch = branchId;
+    if (status) filter.status = status;
+
+    // date filter (today tokens)
+    if (date) {
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt = { $gte: start, $lte: end };
+    }
+
+    // Filter by queue directly
+    if (queueId) {
+      filter.queue = queueId;
+    }
+
+    // Filter by counter
+    if (counterId && !queueId) {
+      const queues = await Queue.find({ counter: counterId }).select('_id');
+      filter.queue = { $in: queues.map((q) => q._id) };
+    }
+
+    return Token.find(filter)
+      .populate('branch queue user')
+      .sort({ createdAt: -1 });
+  }
 }
 
 export default new TokenService();
