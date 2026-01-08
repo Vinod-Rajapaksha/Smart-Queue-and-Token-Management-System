@@ -4,9 +4,11 @@ import config from "./config/env.js";
 import connectDB, { closeDB } from "./config/db.js";
 import logger from "./config/logger.js";
 import { startQueueCleanupJob } from "./jobs/queueCleanup.js";
+import { startQueueMidnightCloseJob } from "./jobs/queueCloseMidnight.js";
 
 let server;
 let cleanupJob;
+let midnightCloseJob;
 
 const startServer = async () => {
   try {
@@ -18,6 +20,9 @@ const startServer = async () => {
 
     // Start background jobs
     cleanupJob = startQueueCleanupJob();
+
+    // Start midnight queue closer job
+    midnightCloseJob = startQueueMidnightCloseJob();
 
     // Start server
     server.listen(config.PORT, () => {
@@ -43,6 +48,13 @@ const shutdown = async (reason, err, exitCode = 0) => {
     cleanupJob?.stop?.();
   } catch (e) {
     logger.error("Failed to stop cleanup job");
+    logger.error(e);
+  }
+
+  try {
+    midnightCloseJob?.stop?.();
+  } catch (e) {
+    logger.error("Failed to stop midnight close job");
     logger.error(e);
   }
 
