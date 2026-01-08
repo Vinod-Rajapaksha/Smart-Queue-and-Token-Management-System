@@ -9,6 +9,13 @@ const queueSchema = new mongoose.Schema(
       index: true,
     },
 
+    counter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Counter',
+      required: true,
+      index: true,
+    },
+
     status: {
       type: String,
       enum: ['OPEN', 'CLOSED'],
@@ -55,10 +62,13 @@ const queueSchema = new mongoose.Schema(
   }
 );
 
-// Prevent duplicate active queues per branch per day (logical rule)
 queueSchema.index(
-  { branch: 1, status: 1, createdAt: 1 },
-  { name: 'branch_status_createdAt_idx' }
+  { branch: 1, counter: 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: 'OPEN' },
+    name: 'unique_open_queue_per_counter',
+  }
 );
 
 const Queue = mongoose.model('Queue', queueSchema);

@@ -17,7 +17,7 @@ const router = Router();
 router.post('/open', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), validateOpenQueue, controller.open);
 router.patch('/close', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), validateCloseQueue, controller.close);
 
-router.get('/active/:branchId', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), validateGetActiveQueue, controller.active);
+router.get('/active/:counterId', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), validateGetActiveQueue, controller.active);
 
 router.post('/next', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), validateCallNext, controller.next);
 

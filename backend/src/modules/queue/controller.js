@@ -14,23 +14,22 @@ import {
 } from './service.js';
 
 export const open = asyncHandler(async (req, res) => {
-  const queue = await openQueue({ branchId: req.body.branchId, userId: req.user?.id });
+  const queue = await openQueue({ counterId: req.body.counterId, userId: req.user?.id });
   return new ApiResponse(201, 'Queue opened', queue).send(res);
 });
 
 export const close = asyncHandler(async (req, res) => {
-  const queue = await closeQueue({ branchId: req.body.branchId, userId: req.user?.id });
+  const queue = await closeQueue({ counterId: req.body.counterId, userId: req.user?.id });
   return new ApiResponse(200, 'Queue closed', queue).send(res);
 });
 
 export const active = asyncHandler(async (req, res) => {
-  const queue = await getActiveQueue(req.params.branchId);
+  const queue = await getActiveQueue(req.params.counterId);
   return new ApiResponse(200, 'Active queue', queue).send(res);
 });
 
 export const next = asyncHandler(async (req, res) => {
   const token = await callNextToken({
-    branchId: req.body.branchId,
     counterId: req.body.counterId,
     userId: req.user?.id,
   });
@@ -60,6 +59,7 @@ export const completed = asyncHandler(async (req, res) => {
 export const list = asyncHandler(async (req, res) => {
   const data = await listQueues({
     branchId: req.query.branchId,
+    counterId: req.query.counterId,
     status: req.query.status,
     page: req.query.page,
     limit: req.query.limit,

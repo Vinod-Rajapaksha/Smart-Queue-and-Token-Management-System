@@ -77,20 +77,13 @@ export default function CounterForm({
         label="Branch"
         value={form.branchId}
         disabled={isEdit}
-        onChange={(e) =>
-          setForm((p) => ({ ...p, branchId: e.target.value }))
-        }
-      >
-        <option value="" disabled>
-          Select branch
-        </option>
-        {branchOptions.map((b) => (
-          <option key={b.value} value={b.value}>
-            {b.label}
-          </option>
-        ))}
-      </Select>
-
+        onChange={(v) => setForm((p) => ({ ...p, branchId: v }))}
+        options={[
+          ...branchOptions.map((b) => ({ value: b.value, label: b.label })),
+        ]}
+        placeholder="Select branch"
+      />
+      
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
           label="Counter name"
