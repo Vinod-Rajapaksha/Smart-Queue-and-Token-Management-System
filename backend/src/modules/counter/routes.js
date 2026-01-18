@@ -14,7 +14,7 @@ import {
 
 const router = Router();
 
-router.get('/', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER), list);
+router.get('/', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER, ROLES.CUSTOMER), list);
 router.get('/:id', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER), getById);
 
 router.post('/', auth, allowRoles(ROLES.ADMIN, ROLES.MANAGER), create);
