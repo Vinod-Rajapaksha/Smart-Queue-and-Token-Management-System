@@ -26,7 +26,7 @@ router.post(
   createBranch
 );
 
-router.get('/', allowRoles(ROLES.ADMIN), getBranches);
+router.get('/', allowRoles(ROLES.ADMIN, ROLES.CUSTOMER), getBranches);
 
 router.get('/:id', allowRoles(ROLES.ADMIN), getBranchById);
 

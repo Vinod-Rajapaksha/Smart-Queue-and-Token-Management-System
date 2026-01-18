@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.js';
-import { allowRoles } from '../../middleware/role.js';
 import {
   validateLogin,
   validateRefreshToken,
@@ -15,13 +14,7 @@ import {
 
 const router = Router();
 
-router.post(
-  '/register',
-  auth,
-  allowRoles('ADMIN'),
-  validateRegister,
-  register,
-);
+router.post('/register', validateRegister, register);
 
 router.post('/login', validateLogin, login);
 
