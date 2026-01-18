@@ -41,7 +41,7 @@ class TokenService {
 
   async getMyTokens(userId) {
     return Token.find({ user: userId })
-      .populate('branch queue')
+      .populate('branch queue counter')
       .sort({ createdAt: -1 });
   }
 
