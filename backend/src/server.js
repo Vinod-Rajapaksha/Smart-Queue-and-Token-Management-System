@@ -25,7 +25,7 @@ const startServer = async () => {
     midnightCloseJob = startQueueMidnightCloseJob();
 
     // Start server
-    server.listen(config.PORT, () => {
+    server.listen(config.PORT, "0.0.0.0", () => {
       logger.info(
         `Server running on port ${config.PORT} in ${config.NODE_ENV} mode`
       );
