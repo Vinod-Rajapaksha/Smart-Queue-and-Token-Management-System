@@ -1,18 +1,29 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { createToken as createTokenService, fetchMyTokens } from "../../services/tokenService";
+import * as ratingService from "../../services/ratingService";
 
 interface TokenState {
   myToken: any | null;
+  activeTokens: any[];
+  completedTokens: any[];
   loading: boolean;
   error: string | null;
   refreshing: boolean;
+  historyLoading: boolean;
+  ratingLoading: boolean;
+  successMessage: string | null;
 }
 
 const initialState: TokenState = {
   myToken: null,
+  activeTokens: [],
+  completedTokens: [],
   loading: false,
   error: null,
   refreshing: false,
+  historyLoading: false,
+  ratingLoading: false,
+  successMessage: null,
 };
 
 export const createToken = createAsyncThunk(
@@ -29,21 +40,41 @@ export const createToken = createAsyncThunk(
   }
 );
 
-export const fetchMyToken = createAsyncThunk(
-  "token/fetchMyToken",
+export const fetchMyTokensSplit = createAsyncThunk(
+  "token/fetchMyTokensSplit",
   async (_, thunkAPI) => {
     try {
       const res = await fetchMyTokens();
       const list = Array.isArray(res?.data) ? res.data : [];
-      const active =
-        list.find((t: any) => !["COMPLETED", "CANCELLED"].includes(t.status)) ||
-        list[0] ||
-        null;
+      const activeTokens = list.filter(
+        (t: any) => !["COMPLETED", "CANCELLED"].includes(t.status)
+      );
+      const completedTokens = list.filter((t: any) =>
+        ["COMPLETED", "CANCELLED"].includes(t.status)
+      );
+      const myToken = activeTokens[0] || null;
 
-      return active;
+      return { activeTokens, completedTokens, myToken };
     } catch (err: any) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Failed to fetch token"
+        err.response?.data?.message || "Failed to fetch tokens"
+      );
+    }
+  }
+);
+
+export const submitTokenRating = createAsyncThunk(
+  "token/submitRating",
+  async (
+    data: { tokenId: string; rating: number; comment?: string },
+    thunkAPI
+  ) => {
+    try {
+      const result = await ratingService.submitRating(data.tokenId, data.rating, data.comment);
+      return result;
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Rating submit failed"
       );
     }
   }
@@ -52,35 +83,66 @@ export const fetchMyToken = createAsyncThunk(
 const tokenSlice = createSlice({
   name: "token",
   initialState,
-  reducers: {},
+  reducers: {
+    clearSuccessMessage(state) {
+      state.successMessage = null;
+    },
+    clearError(state) {
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       // create token
       .addCase(createToken.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.successMessage = null; 
       })
       .addCase(createToken.fulfilled, (state, action) => {
         state.loading = false;
         state.myToken = action.payload?.data ?? action.payload;
+        state.successMessage = action.payload?.message ?? "Success";
       })
       .addCase(createToken.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        state.successMessage = null;
       })
 
-      // refresh token
-      .addCase(fetchMyToken.pending, (state) => {
+      // refresh tokens
+      .addCase(fetchMyTokensSplit.pending, (state) => {
         state.refreshing = true;
+        state.historyLoading = true;
       })
-      .addCase(fetchMyToken.fulfilled, (state, action) => {
+      .addCase(fetchMyTokensSplit.fulfilled, (state, action) => {
         state.refreshing = false;
-        if (action.payload) state.myToken = action.payload;
+        state.historyLoading = false;
+
+        state.activeTokens = action.payload.activeTokens;
+        state.completedTokens = action.payload.completedTokens;
+        state.myToken = action.payload.myToken;
       })
-      .addCase(fetchMyToken.rejected, (state) => {
+      .addCase(fetchMyTokensSplit.rejected, (state) => {
         state.refreshing = false;
+        state.historyLoading = false;
+      })
+
+      // submit token rating
+      .addCase(submitTokenRating.pending, (state) => {
+        state.ratingLoading = true;
+        state.error = null;
+      })
+      .addCase(submitTokenRating.fulfilled, (state) => {
+        state.ratingLoading = false;
+      })
+      .addCase(submitTokenRating.rejected, (state, action) => {
+        state.ratingLoading = false;
+        state.error = action.payload as string;
       });
+
   },
 });
 
+export const { clearSuccessMessage, clearError } = tokenSlice.actions;
 export default tokenSlice.reducer;
