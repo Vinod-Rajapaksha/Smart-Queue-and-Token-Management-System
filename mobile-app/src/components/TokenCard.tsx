@@ -9,6 +9,7 @@ import {
   PauseCircle,
   SkipForward,
   HelpCircle,
+  PlayCircle,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -27,17 +28,14 @@ interface TokenCardProps {
   onPress?: () => void;
 }
 
-const STATUS_UI: Record<
-  string,
-  { text: string; icon: any; colors: [string, string] }
-> = {
+const STATUS_UI: Record<string, { text: string; icon: any; colors: [string, string] }> = {
   CREATED: {
     text: "Created",
     icon: PauseCircle,
     colors: ["#f59e0b", "#eab308"],
   },
   WAITING: {
-    text: "Waiting",
+    text: "Waiting in Queue",
     icon: Clock,
     colors: ["#f59e0b", "#eab308"],
   },
@@ -48,7 +46,7 @@ const STATUS_UI: Record<
   },
   SERVING: {
     text: "Now Serving",
-    icon: AlertCircle,
+    icon: PlayCircle,
     colors: ["#3b82f6", "#06b6d4"],
   },
   COMPLETED: {
@@ -74,19 +72,32 @@ export default function TokenCard({ token, onPress }: TokenCardProps) {
     [token?.status]
   );
 
-  const cfg = STATUS_UI[statusKey] ?? {
-    text: statusKey || "Unknown",
-    icon: HelpCircle,
-    colors: ["#6b7280", "#9ca3af"] as [string, string],
-  };
+  const cfg =
+    STATUS_UI[statusKey] ?? {
+      text: statusKey || "Unknown",
+      icon: HelpCircle,
+      colors: ["#6b7280", "#9ca3af"] as [string, string],
+    };
 
   const StatusIcon = cfg.icon;
-  
+
   const tokenNumber = token?.tokenNumber ?? token?.number ?? "-";
   const branchName = token?.branch?.name ?? token?.branchName ?? "-";
   const counterText =
     token?.counter?.code ?? token?.counter?.name ?? token?.counterNumber ?? null;
+
   const createdAt = token?.createdAt ?? null;
+  const completedAt = token?.completedAt ?? null;
+  const cancelledAt = token?.cancelledAt ?? null;
+
+  const formatDT = (dt: any) =>
+    new Date(dt).toLocaleString([], {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
   const CardContent = () => (
     <LinearGradient
@@ -113,16 +124,15 @@ export default function TokenCard({ token, onPress }: TokenCardProps) {
         <Text className="text-white text-sm font-medium mt-2 opacity-90">
           {cfg.text}
         </Text>
-        <Text className="text-white/70 text-xs mt-1">
-          Status: {statusKey || "UNKNOWN"}
-        </Text>
       </View>
 
       {/* Details */}
       <View className="bg-white/10 rounded-2xl p-4">
         <View className="flex-row items-center mb-2">
           <MapPin size={16} color="#ffffff" />
-          <Text className="text-white ml-2 font-medium">{branchName}</Text>
+          <Text className="text-white ml-2 font-medium" numberOfLines={1}>
+            {branchName}
+          </Text>
         </View>
 
         {counterText ? (
@@ -130,7 +140,7 @@ export default function TokenCard({ token, onPress }: TokenCardProps) {
             <View className="w-4 h-4 rounded-full bg-white/20 items-center justify-center">
               <Text className="text-white text-xs font-bold">C</Text>
             </View>
-            <Text className="text-white ml-2 font-medium">
+            <Text className="text-white ml-2 font-medium" numberOfLines={1}>
               {String(counterText)}
             </Text>
           </View>
@@ -138,11 +148,19 @@ export default function TokenCard({ token, onPress }: TokenCardProps) {
 
         {createdAt ? (
           <Text className="text-white/75 text-xs mt-3">
-            Created:{" "}
-            {new Date(createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            Created: {formatDT(createdAt)}
+          </Text>
+        ) : null}
+
+        {statusKey === "COMPLETED" && completedAt ? (
+          <Text className="text-white/75 text-xs mt-3">
+            Completed: {formatDT(completedAt)}
+          </Text>
+        ) : null}
+
+        {statusKey === "CANCELLED" && cancelledAt ? (
+          <Text className="text-white/75 text-xs mt-3">
+            Cancelled: {formatDT(cancelledAt)}
           </Text>
         ) : null}
       </View>
@@ -151,11 +169,7 @@ export default function TokenCard({ token, onPress }: TokenCardProps) {
 
   if (onPress) {
     return (
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.9}
-        className="mb-4 mx-2"
-      >
+      <TouchableOpacity onPress={onPress} activeOpacity={0.92} className="mb-4 mx-2">
         <CardContent />
       </TouchableOpacity>
     );
