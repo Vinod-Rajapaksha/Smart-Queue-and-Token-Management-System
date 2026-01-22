@@ -1,16 +1,23 @@
-import { View, Text, ScrollView, RefreshControl, useWindowDimensions, Pressable } from "react-native";
+import { View, Text, ScrollView, RefreshControl, Pressable } from "react-native";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "expo-router";
 import { useAppDispatch, useAppSelector } from "../../src/store/hooks";
-import { createToken, fetchMyToken } from "../../src/store/slices/token.slice";
+import { createToken, fetchMyTokensSplit, submitTokenRating, clearSuccessMessage, clearError } from "../../src/store/slices/token.slice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import RatingModal from "../(modals)/rating";
 import Button from "../../src/components/Button";
 import TokenCard from "../../src/components/TokenCard";
 import Loading from "../../src/components/Loading";
+import PickerModal from "../(modals)/picker";
 import api from "../../src/services/api";
-import { Building2, ListChecks, Ticket } from "lucide-react-native";
+import { Building2, ListChecks, Ticket, History, ChevronDown } from "lucide-react-native";
 
 export default function Token() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
-  const { myToken, error } = useAppSelector((state) => state.token);
+  const { activeTokens, completedTokens, loading: creatingToken, error } = useAppSelector((state) => state.token);
+
+  const { successMessage } = useAppSelector((state) => state.token);
 
   const [branchId, setBranchId] = useState<string>("");
   const [counterId, setCounterId] = useState<string>("");
@@ -21,26 +28,80 @@ export default function Token() {
   const [activeQueue, setActiveQueue] = useState<any>(null);
   const [checkingQueue, setCheckingQueue] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const { width } = useWindowDimensions();
+  const [branchPickerOpen, setBranchPickerOpen] = useState(false);
+  const [counterPickerOpen, setCounterPickerOpen] = useState(false);
 
-  const columns = useMemo(() => {
-    if (width >= 900) return 3;
-    if (width >= 600) return 2;
-    return 1;
-  }, [width]);
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [ratingToken, setRatingToken] = useState<any | null>(null);
 
-  const cardWidth = useMemo(() => {
-    const gap = 12;
-    const containerPadding = 16 * 2;
-    const totalGaps = gap * (columns - 1);
-    return (width - containerPadding - totalGaps) / columns;
-  }, [width, columns]);
+  const PROMPT_KEY = "PROMPTED_RATING_TOKENS";
 
-  const fetchData = async () => {
-    setLoading(true);
+  const getPromptedIds = async (): Promise<string[]> => {
+    const raw = await AsyncStorage.getItem(PROMPT_KEY);
+    return raw ? JSON.parse(raw) : [];
+  };
+
+  const markPrompted = async (tokenId: string) => {
+    const list = await getPromptedIds();
+    if (list.includes(tokenId)) return;
+    list.push(tokenId);
+    await AsyncStorage.setItem(PROMPT_KEY, JSON.stringify(list));
+  };
+
+  useEffect(() => {
+    if (!completedTokens?.length) return;
+    if (ratingOpen) return;
+
+    const run = async () => {
+      const prompted = await getPromptedIds();
+
+      const target = completedTokens
+        .map((x: any) => x?.data ?? x)
+        .find((t: any) => {
+          const id = t._id || t.id;
+          if (!id) return false;
+
+          const isCompleted = t.status === "COMPLETED"; 
+
+          return isCompleted && !prompted.includes(id);
+        });
+
+      if (target) {
+        const id = target._id || target.id;
+        await markPrompted(id);
+        setRatingToken(target);
+        setRatingOpen(true);
+      }
+    };
+
+    run();
+  }, [completedTokens, ratingOpen]);
+
+  const handleSubmitRating = async (payload: any) => {
+    if (!ratingToken) throw new Error("No token");
+
+    const tokenId = ratingToken._id || ratingToken.id;
+
+    const res = await dispatch(
+      submitTokenRating({
+        tokenId,
+        rating: payload?.rating,
+        comment: payload?.comment,
+      })
+    );
+
+    if (submitTokenRating.fulfilled.match(res)) {
+      dispatch(fetchMyTokensSplit());
+      return true;
+    }
+    throw new Error("Submit failed");
+  };
+
+  const fetchData = async (showPageLoader = true) => {
+    if (showPageLoader) setPageLoading(true);
     try {
       const [bRes, cRes] = await Promise.all([
         api.get(process.env.EXPO_PUBLIC_API_BASE_URL + "/branches", {
@@ -57,15 +118,37 @@ export default function Token() {
       setBranches(bList);
       setCounters(cList);
 
-      if (!branchId && bList.length > 0) {
-        setBranchId(bList[0]._id || bList[0].id);
-      }
     } catch (e) {
       console.log(e);
       setBranches([]);
       setCounters([]);
     } finally {
-      setLoading(false);
+      if (showPageLoader) setPageLoading(false);
+    }
+  };
+
+  const fetchActiveQueue = async () => {
+    if (!counterId) {
+      setActiveQueue(null);
+      return;
+    }
+    setCheckingQueue(true);
+    try {
+      const res = await api.get(
+        process.env.EXPO_PUBLIC_API_BASE_URL + "/queues/active/" + counterId,
+        {
+          headers: {
+            "Cache-Control": "no-store",
+            Pragma: "no-cache",
+          },
+          params: { t: Date.now() },
+        }
+      );
+      setActiveQueue(res.data?.data ?? null);
+    } catch (e) {
+      setActiveQueue(null);
+    } finally {
+      setCheckingQueue(false);
     }
   };
 
@@ -73,10 +156,23 @@ export default function Token() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (!successMessage && !error) return;
+
+    const t = setTimeout(() => {
+      if (successMessage) dispatch(clearSuccessMessage());
+      if (error) dispatch(clearError());
+    }, 2800);
+
+    return () => clearTimeout(t);
+  }, [successMessage, error, dispatch]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await fetchData();
+      await fetchData(false);
+      await dispatch(fetchMyTokensSplit());
+      await fetchActiveQueue();
     } finally {
       setRefreshing(false);
     }
@@ -97,37 +193,17 @@ export default function Token() {
   }, [counters, branchId]);
 
   useEffect(() => {
-    dispatch(fetchMyToken());
+    dispatch(fetchMyTokensSplit());
 
     const i = setInterval(() => {
-      dispatch(fetchMyToken());
+      dispatch(fetchMyTokensSplit());
     }, 3000);
 
     return () => clearInterval(i);
   }, [dispatch]);
 
   useEffect(() => {
-    const run = async () => {
-      if (!counterId) {
-        setActiveQueue(null);
-        return;
-      }
-
-      setCheckingQueue(true);
-      try {
-        const res = await api.get(
-          process.env.EXPO_PUBLIC_API_BASE_URL + "/queues/active/" + counterId,
-          { headers: { "Cache-Control": "no-cache" } }
-        );
-        setActiveQueue(res.data?.data ?? null);
-      } catch (e: any) {
-        setActiveQueue(null);
-      } finally {
-        setCheckingQueue(false);
-      }
-    };
-
-    run();
+    fetchActiveQueue();
   }, [counterId]);
 
   const selectedBranch = useMemo(
@@ -166,26 +242,36 @@ export default function Token() {
       : "text-gray-700";
 
   const queueId = activeQueue?._id || activeQueue?.id || "";
-  const canCreate = selectionComplete && isQueueOpen && !!queueId && !loading;
+  const canCreate = selectionComplete && isQueueOpen && !!queueId && !creatingToken;
 
   const handleCreateToken = async () => {
   if (!canCreate) return;
   await dispatch(createToken({ branchId, queueId }));
-  dispatch(fetchMyToken());
+  dispatch(fetchMyTokensSplit());
 };
 
   return (
     <View className="flex-1 bg-gray-50">
-      <View className="px-4 pt-4 pb-3">
-        <Text className="text-2xl font-extrabold text-gray-900">Token</Text>
-        <Text className="text-sm text-gray-500 mt-1">
-          Select a branch and counter. If queue is open, create your token.
-        </Text>
+      {/* Header */}
+      <View className="px-4 pt-4 pb-3 flex-row items-start justify-between">
+        <View>
+          <Text className="text-2xl font-extrabold text-gray-900">Token</Text>
+          <Text className="text-sm text-gray-500 mt-1">
+            Select a branch and counter. If queue is open, create your token.
+          </Text>
+        </View>
+
+        <Pressable
+          onPress={() => router.push("/token-history")}
+          className="p-2 rounded-xl bg-white border border-gray-200"
+        >
+          <History size={18} color="#111827" />
+        </Pressable>
       </View>
 
-      {loading ? (
+      {pageLoading ? (
         <View className="flex-1 items-center justify-center">
-          <Loading message="Loading ..."/>
+          <Loading message="Loading ..." />
         </View>
       ) : (
         <ScrollView
@@ -198,6 +284,12 @@ export default function Token() {
           {error ? (
             <View className="mb-3 bg-white border border-red-200 rounded-2xl p-4">
               <Text className="text-red-600 font-semibold">{error}</Text>
+            </View>
+          ) : null}
+
+          {successMessage ? (
+            <View className="mb-3 bg-white border border-green-200 rounded-2xl p-4">
+              <Text className="text-green-600 font-semibold">{successMessage}</Text>
             </View>
           ) : null}
 
@@ -248,7 +340,7 @@ export default function Token() {
             <View className="mt-4">
               <Button
                 title={
-                  loading
+                  creatingToken
                     ? "Creating..."
                     : !selectionComplete
                     ? "Select branch & counter"
@@ -262,12 +354,6 @@ export default function Token() {
                 disabled={!canCreate}
               />
             </View>
-
-            {loading || checkingQueue ? (
-              <View className="mt-3">
-                <Loading />
-              </View>
-            ) : null}
           </View>
 
           {/* Branches */}
@@ -285,67 +371,24 @@ export default function Token() {
             </View>
           </View>
 
-          {branches.length === 0 ? (
-            <View className="bg-white rounded-2xl p-5 border border-gray-200 mb-4">
-              <Text className="text-base font-bold text-gray-900">
-                No branches available
-              </Text>
-              <Text className="text-sm text-gray-500 mt-1">
-                Pull down to refresh.
-              </Text>
-            </View>
-          ) : (
-            <View className="flex-row flex-wrap mb-4" style={{ gap: 12 }}>
-              {branches.map((branch) => {
-                const id = branch._id || branch.id;
-                const active = id === branchId;
+          <View className="mb-4">
+            <Pressable
+              onPress={() => setBranchPickerOpen(true)}
+              className="bg-white border border-gray-200 rounded-2xl p-4 flex-row items-center justify-between"
+            >
+              <View className="flex-1 pr-3">
+                <Text className="text-xs text-gray-500">Branch</Text>
+                <Text className="text-base font-extrabold text-gray-900 mt-1" numberOfLines={1}>
+                  {selectedBranch?.name || "Select Branch"}
+                </Text>
+                <Text className="text-sm text-gray-500 mt-1" numberOfLines={1}>
+                  {selectedBranch?.address || "Tap to choose a branch"}
+                </Text>
+              </View>
 
-                return (
-                  <Pressable
-                    key={id}
-                    onPress={() => setBranchId(id)}
-                    className={`rounded-2xl p-4 border ${
-                      active
-                        ? "bg-violet-700 border-violet-700"
-                        : "bg-white border-gray-200"
-                    }`}
-                    style={{ width: cardWidth }}
-                  >
-                    <Text
-                      className={`text-base font-extrabold ${
-                        active ? "text-white" : "text-gray-900"
-                      }`}
-                      numberOfLines={1}
-                    >
-                      {branch.name}
-                    </Text>
-                    <Text
-                      className={`text-sm mt-1 ${
-                        active ? "text-gray-200" : "text-gray-500"
-                      }`}
-                      numberOfLines={2}
-                    >
-                      {branch.address || "No address"}
-                    </Text>
-
-                    <View
-                      className={`mt-3 self-start px-3 py-1 rounded-full ${
-                        active ? "bg-white/20" : "bg-gray-100"
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs font-semibold ${
-                          active ? "text-white" : "text-gray-700"
-                        }`}
-                      >
-                        {active ? "Selected" : "Tap to select"}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
+              <ChevronDown size={18} color="#111827" />
+            </Pressable>
+          </View>
 
           {/* Counters */}
           <View className="flex-row items-center justify-between mb-3">
@@ -362,81 +405,131 @@ export default function Token() {
             </View>
           </View>
 
-          {!branchId ? (
-            <View className="bg-white rounded-2xl p-5 border border-gray-200">
-              <Text className="text-base font-bold text-gray-900">
-                Select a branch first
-              </Text>
-              <Text className="text-sm text-gray-500 mt-1">
-                Counters will appear after selecting a branch.
-              </Text>
-            </View>
-          ) : countersForBranch.length === 0 ? (
-            <View className="bg-white rounded-2xl p-5 border border-gray-200">
-              <Text className="text-base font-bold text-gray-900">
-                No counters available
-              </Text>
-              <Text className="text-sm text-gray-500 mt-1">
-                This branch has no counters.
-              </Text>
-            </View>
-          ) : (
-            <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-              {countersForBranch.map((counter) => {
-                const id = counter._id || counter.id;
-                const active = id === counterId;
+          <View className="mb-4">
+            <Pressable
+              onPress={() => {
+                if (!branchId) return;
+                setCounterPickerOpen(true);
+              }}
+              className={`border rounded-2xl p-4 flex-row items-center justify-between ${
+                branchId ? "bg-white border-gray-200" : "bg-gray-100 border-gray-200"
+              }`}
+            >
+              <View className="flex-1 pr-3">
+                <Text className="text-xs text-gray-500">Counter</Text>
+                <Text className="text-base font-extrabold text-gray-900 mt-1" numberOfLines={1}>
+                      {selectedCounter
+                        ? selectedCounter.code
+                          ? `${selectedCounter.name} (${selectedCounter.code})`
+                          : selectedCounter.name
+                        : "Select Counter"
+                      }
+                </Text>
 
-                return (
-                  <Pressable
-                    key={id}
-                    onPress={() => setCounterId(id)}
-                    className={`rounded-2xl p-4 border ${
-                      active
-                        ? "bg-violet-700 border-violet-700"
-                        : "bg-white border-gray-200"
-                    }`}
-                    style={{ width: cardWidth }}
-                  >
-                    <Text
-                      className={`text-base font-extrabold ${
-                        active ? "text-white" : "text-gray-900"
-                      }`}
-                      numberOfLines={1}
-                    >
-                      {counter.code
-                        ? `${counter.name} (${counter.code})`
-                        : counter.name}
-                    </Text>
-
-                    <View
-                      className={`mt-3 self-start px-3 py-1 rounded-full ${
-                        active ? "bg-white/20" : "bg-gray-100"
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs font-semibold ${
-                          active ? "text-white" : "text-gray-700"
-                        }`}
-                      >
-                        {active ? "Selected" : "Tap to select"}
+                {!branchId ? (
+                  <Text className="text-sm text-gray-500 mt-1">
+                    Select a branch first
+                  </Text>
+                ) : !selectedCounter ? (
+                  <Text className="text-sm text-gray-500 mt-1">
+                    Tap to choose a counter
+                  </Text>
+                ) : (
+                  <>
+                    {!!selectedCounter.description && (
+                      <Text className="text-sm text-gray-500 mt-1" numberOfLines={1}>
+                        {selectedCounter.description}
                       </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
+                    )}
+                    <Text className="text-sm text-gray-400 mt-1">
+                      Tap to change counter
+                    </Text>
+                  </>
+                )}
+              </View>
 
-          {myToken ? (
-            <View className="mt-5">
-              <Text className="text-base font-bold text-gray-900 mb-3">
-                Your Token
+              <ChevronDown size={18} color="#111827" />
+            </Pressable>
+
+            {!branchId ? (
+              <Text className="text-xs text-gray-500 mt-2">
+                Select a branch first to see counters.
               </Text>
-              <TokenCard token={myToken?.data ?? myToken} />
-            </View>
-          ) : null}
+            ) : null}
+          </View>
+
+          <View className="mt-5">
+            <Text className="text-base font-bold text-gray-900 mb-3">
+              Your Current Tokens
+            </Text>
+
+            {activeTokens.length === 0 ? (
+              <View className="bg-white rounded-2xl p-5 border border-gray-200">
+                <Text className="text-base font-bold text-gray-900">
+                  No active tokens
+                </Text>
+                <Text className="text-sm text-gray-500 mt-1">
+                  Create a token when queue is open.
+                </Text>
+              </View>
+            ) : (
+              <View style={{ gap: 12 }}>
+                {activeTokens.map((t: any) => (
+                  <TokenCard key={t._id || t.id} token={t?.data ?? t} />
+                ))}
+              </View>
+            )}
+          </View>
         </ScrollView>
       )}
+
+      <PickerModal
+        visible={branchPickerOpen}
+        title="Select Branch"
+        items={branches}
+        selectedId={branchId}
+        onClose={() => setBranchPickerOpen(false)}
+        onSelect={(branch) => {
+          const id = branch._id || branch.id;
+          setBranchId(id);
+        }}
+        getId={(b: any) => (b._id || b.id) as string}
+        getTitle={(b: any) => b.name}
+        getSubtitle={(b: any) => b.address}
+        searchPlaceholder="Search branch by name / address"
+        emptyTitle="No branches found"
+        emptySubtitle="Pull to refresh or check again."
+      />
+
+      <PickerModal
+        visible={counterPickerOpen}
+        title="Select Counter"
+        items={countersForBranch}
+        selectedId={counterId}
+        onClose={() => setCounterPickerOpen(false)}
+        onSelect={(counter) => {
+          const id = counter._id || counter.id;
+          setCounterId(id);
+        }}
+        getId={(c: any) => (c._id || c.id) as string}
+        getTitle={(c: any) =>
+          c.code ? `${c.name} (${c.code})` : c.name
+        }
+        getSubtitle={(c: any) => (c.description ? c.description : "")}
+        searchPlaceholder="Search counter by name / code"
+        emptyTitle={!branchId ? "Select a branch first" : "No counters found"}
+        emptySubtitle={!branchId ? "Choose a branch to see counters." : "This branch has no counters."}
+      />
+
+      <RatingModal
+        visible={ratingOpen}
+        token={ratingToken}
+        onClose={() => {
+          setRatingOpen(false);
+          setRatingToken(null);
+        }}
+        onSubmit={handleSubmitRating}
+      />
     </View>
   );
 }
