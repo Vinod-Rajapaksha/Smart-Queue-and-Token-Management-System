@@ -37,8 +37,9 @@ export default function ProfileScreen() {
     );
   }, [name, email, telephone]);
 
-  const loadMe = async () => {
-    setLoading(true);
+  const loadMe = async (showPageLoader = true) => {
+    const shouldShow = showPageLoader || !me;
+    if (shouldShow) setLoading(true);
     try {
       const data = await getMe();
       setMe(data);
@@ -50,7 +51,7 @@ export default function ProfileScreen() {
       Alert.alert("Error", "Failed to load profile. Please try again.");
       setMe(null);
     } finally {
-      setLoading(false);
+      if (shouldShow) setLoading(false);
     }
   };
 
@@ -61,7 +62,7 @@ export default function ProfileScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await loadMe();
+      await loadMe(false);
     } finally {
       setRefreshing(false);
     }
@@ -126,20 +127,6 @@ export default function ProfileScreen() {
     }
   };
 
-  if (!me) {
-    return (
-      <View className="bg-white rounded-2xl border border-gray-200 p-5 w-full">
-        <Text className="text-lg font-extrabold text-gray-900">Profile not available</Text>
-        <Text className="text-sm text-gray-500 mt-1">
-          Pull down to refresh or login again.
-        </Text>
-        <View className="mt-4">
-          <Button title="Try Again" onPress={loadMe} />
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
@@ -154,6 +141,20 @@ export default function ProfileScreen() {
         <View className="flex-1 items-center justify-center">
           <Loading message="Loading ..."/>
         </View>
+      ) : !me ? (
+      <View className="px-4">
+        <View className="bg-white rounded-2xl border border-gray-200 p-5">
+          <Text className="text-lg font-extrabold text-gray-900">
+            Profile not available
+          </Text>
+          <Text className="text-sm text-gray-500 mt-1">
+            Pull down to refresh or login again.
+          </Text>
+          <View className="mt-4">
+            <Button title="Try Again" onPress={() => loadMe(true)} />
+          </View>
+        </View>
+      </View>
       ) : (
         <ScrollView
           className="flex-1 px-4"
