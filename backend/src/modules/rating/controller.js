@@ -5,7 +5,7 @@ import { createRating, listRatings, getRatingSummary } from './service.js';
 export const createRatingController = asyncHandler(async (req, res) => {
   const { tokenId, rating, comment } = req.body;
 
-  const userId = req.user?._id || null;
+  const userId = req.user.id || null;
   const doc = await createRating({ tokenId, rating, comment, userId });
 
   return new ApiResponse(201, 'Rating submitted', doc).send(res);
