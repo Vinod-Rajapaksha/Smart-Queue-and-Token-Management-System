@@ -17,11 +17,9 @@ export const getMe = async (): Promise<MeDto> => {
   return response.data.data;
 };
 
-export const updateMe = async (data: {
-  name: string;
-  email: string;
-  telephone: string;
-}): Promise<MeDto> => {
+export type UpdateMeDto = Partial<Pick<MeDto, "name" | "email" | "telephone">>;
+
+export const updateMe = async (data: UpdateMeDto): Promise<MeDto> => {
   const response = await api.patch("/users/me", data);
   return response.data.data;
 };
