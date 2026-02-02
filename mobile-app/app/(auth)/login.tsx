@@ -11,14 +11,31 @@ import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { loginUser } from '../../src/store/slices/auth.slice';
 import Button from '../../src/components/Button';
 import Input from '../../src/components/Input';
-import Loading from '../../src/components/Loading';
 import { router } from 'expo-router';
 import { Mail, User } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome } from "@expo/vector-icons";
+import AppAlert from "../../src/components/Alert";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMsg, setAlertMsg] = useState("");
+
+  const showAlert = (title: string, msg: string) => {
+    setAlertTitle(title);
+    setAlertMsg(msg);
+    setAlertOpen(true);
+  };
+  
+  const isValidEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const isFormValid = isValidEmail(email) && password.length >= 8;
+
   const dispatch = useAppDispatch();
   const { loading, error, user } = useAppSelector((state) => state.auth);
 
@@ -29,13 +46,11 @@ export default function LoginScreen() {
   }, [user]);
 
   const handleLogin = () => {
-    if (!email || !password) return;
+    setTouched(true);
+
+    if (!isFormValid) return;
     dispatch(loginUser({ email, password }));
   };
-
-  if (loading) {
-    return <Loading fullScreen message="Logging you in..." />;
-  }
 
   return (
     <LinearGradient
@@ -82,9 +97,20 @@ export default function LoginScreen() {
               <Text className="text-xl font-bold text-gray-900 mb-1">Welcome Back</Text>
               <Text className="text-gray-500 mb-4">Sign in to manage your queues efficiently</Text>
 
-              {error && (
-                <View className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
-                  <Text className="text-red-700 text-center">{error}</Text>
+              {!!error && (
+                <View
+                  style={{
+                    backgroundColor: "#fef2f2",
+                    borderColor: "#fecaca",
+                    borderWidth: 1,
+                    borderRadius: 12,
+                    padding: 16,
+                    marginBottom: 24,
+                  }}
+                >
+                  <Text style={{ color: "#b91c1c", textAlign: "center", fontWeight: "600" }}>
+                    {error}
+                  </Text>
                 </View>
               )}
 
@@ -95,6 +121,7 @@ export default function LoginScreen() {
                 onChangeText={setEmail}
                 icon="email"
                 keyboardType="email-address"
+                error={touched && !isValidEmail(email) ? "Please enter a valid email address" : ""}
               />
 
               <Input
@@ -102,8 +129,9 @@ export default function LoginScreen() {
                 placeholder="Enter your password"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 icon="password"
+                error={touched && password.length < 8 ? "Password must be at least 8 characters" : ""}
               />
 
               <View className="flex-row justify-end mb-4">
@@ -113,12 +141,13 @@ export default function LoginScreen() {
               </View>
 
               <Button
-                title="Sign In"
+                title={loading ? "Signing In..." : "Sign In"}
                 onPress={handleLogin}
                 variant="primary"
                 size="large"
                 fullWidth
-                icon={<Mail size={20} color="#ffffff" />}
+                disabled={loading}
+                icon={!loading && <Mail size={20} color="#ffffff" />}
               />
 
               <View className="flex-row items-center my-4">
@@ -132,6 +161,8 @@ export default function LoginScreen() {
                 variant="outline"
                 size="medium"
                 fullWidth
+                onPress={() => showAlert("Sign in with Google","🚀 Coming soon! This feature will be available in the next update.")}
+                icon={<FontAwesome name="google" size={18} color="#EA4335" />}
               />
             </View>
 
@@ -151,6 +182,12 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <AppAlert
+        visible={alertOpen}
+        title={alertTitle}
+        message={alertMsg}
+        onClose={() => setAlertOpen(false)}
+      />
     </LinearGradient>
   );
 }
