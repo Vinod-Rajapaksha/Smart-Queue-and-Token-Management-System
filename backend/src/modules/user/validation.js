@@ -57,7 +57,7 @@ export const validateCreateUser = (req, res, next) => {
     });
   }
 
-  if (branch && typeof branch !== 'string') {
+  if (branch !== undefined && branch !== null && typeof branch !== 'string') {
     return res.status(400).json({
       success: false,
       message: 'Branch must be a valid ID string',
@@ -108,7 +108,7 @@ export const validateUpdateUser = (req, res, next) => {
     });
   }
 
-  if (branch !== undefined && typeof branch !== 'string') {
+  if (branch !== undefined && branch !== null && typeof branch !== 'string') {
     return res.status(400).json({
       success: false,
       message: 'If provided, branch must be a valid ID string',

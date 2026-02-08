@@ -11,7 +11,6 @@ import {
 } from './validation.js';
 import {
   getUsers,
-  getStaff,
   getUserById,
   getMe,
   createUser,
@@ -20,6 +19,7 @@ import {
   updateUserStatus,
   resetUserPassword,
   changeMyPassword,
+  deleteUser, 
 } from './controller.js';
 import { ROLES } from '../../core/constants.js';
 
@@ -31,22 +31,24 @@ router.get('/me', getMe);
 router.patch('/me', validateUpdateOwnProfile, updateMe);
 router.patch('/me/password', validateChangeOwnPassword, changeMyPassword);
 
-router.get('/', allowRoles(ROLES.ADMIN), getUsers);
-router.get('/staff', allowRoles(ROLES.ADMIN), getStaff);
-router.post('/', allowRoles(ROLES.ADMIN), validateCreateUser, createUser);
+router.get('/', allowRoles(ROLES.ADMIN, ROLES.MANAGER), getUsers);
+router.post('/', allowRoles(ROLES.ADMIN, ROLES.MANAGER), validateCreateUser, createUser);
+
 router.get('/:id', allowRoles(ROLES.ADMIN), getUserById);
-router.patch('/:id', allowRoles(ROLES.ADMIN), validateUpdateUser, updateUser);
+router.patch('/:id', allowRoles(ROLES.ADMIN,ROLES.MANAGER), validateUpdateUser, updateUser);
 router.patch(
   '/:id/status',
-  allowRoles(ROLES.ADMIN),
+  allowRoles(ROLES.ADMIN,ROLES.MANAGER),
   validateStatusUpdate,
   updateUserStatus,
 );
 router.patch(
   '/:id/reset-password',
-  allowRoles(ROLES.ADMIN),
+  allowRoles(ROLES.ADMIN,ROLES.MANAGER),
   validateResetPassword,
   resetUserPassword,
 );
+
+router.delete('/:id', allowRoles(ROLES.ADMIN, ROLES.MANAGER), deleteUser);
 
 export default router;

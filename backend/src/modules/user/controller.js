@@ -14,15 +14,12 @@ export const getUsers = asyncHandler(async (req, res) => {
     filters.isActive = isActive === 'true';
   }
 
-  const users = await userService.listUsers(filters);
+  const users = await userService.listUsers(filters, {
+    id: req.user.id,
+    role: req.user.role,
+  });
 
   return new ApiResponse(200, 'Users fetched successfully', users).send(res);
-});
-
-export const getStaff = asyncHandler(async (req, res) => {
-  const staff = await userService.listStaff();
-
-  return new ApiResponse(200, 'Staff fetched successfully', staff).send(res);
 });
 
 export const getUserById = asyncHandler(async (req, res) => {
@@ -51,6 +48,10 @@ export const createUser = asyncHandler(async (req, res) => {
     telephone,
     role,
     branch,
+  },
+  {
+    id: req.user.id,
+    role: req.user.role,
   });
 
   return new ApiResponse(201, 'User created successfully', user).send(res);
@@ -99,4 +100,15 @@ export const changeMyPassword = asyncHandler(async (req, res) => {
   await userService.changeOwnPassword(userId, currentPassword, newPassword);
 
   return new ApiResponse(200, 'Password updated successfully', null).send(res);
+});
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  const { id: targetUserId } = req.params;
+
+  await userService.deleteUserHard(targetUserId, {
+    id: req.user.id,
+    role: req.user.role,
+  });
+
+  return new ApiResponse(200, 'User deleted successfully', null).send(res);
 });
