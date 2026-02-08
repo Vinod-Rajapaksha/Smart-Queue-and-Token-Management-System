@@ -14,7 +14,7 @@ const variants: Record<Variant, string> = {
     "text-emerald-300 border-emerald-500/40 bg-emerald-500/10",
 
   warning:
-    "text-yellow-300300 border-yellow-500/40 bg-yellow-500/10",
+    "text-yellow-300 border-yellow-500/40 bg-yellow-500/10",
 
   danger:
     "text-red-300 border-red-500/40 bg-red-500/10",
