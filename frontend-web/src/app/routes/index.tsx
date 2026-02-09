@@ -12,6 +12,7 @@ import { BranchListPage, BranchDetailsPage } from "../../features/branch";
 import { CounterPage } from "../../features/counter";
 import { QueueListPage, QueueLivePage } from "../../features/queue";
 import { TokenListPage } from "../../features/token";
+import AdminUsersPage from "../../features/user/pages/AdminUsersPage";
 
 export const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/login" replace /> },
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
               { path: "queues", element: <QueueListPage /> },
               { path: "queues/live", element: <QueueLivePage /> },
               { path: "tokens", element: <TokenListPage /> },
+              { path: "users", element: <AdminUsersPage /> },
             ],
           },
         ],
